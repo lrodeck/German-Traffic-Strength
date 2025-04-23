@@ -41,7 +41,7 @@ Based on these metrics, it computes a customizable "Attractivity Index" and visu
 
 ## Installation
 
-1.  **Clone the repository:** `bash     git clone <your-repository-url>     cd <repository-directory>`
+1.  **Clone the repository:** `bash     git clone https://github.com/lrodeck/German-Traffic-Strength     cd <repository-directory>`
 2.  **Open the R script** (e.g., `hamburg_hex_analysis.R`) in RStudio.
 3.  **Install required R packages:** Run the following command in the R console: `R     install.packages(c("sf", "osmdata", "dplyr", "leaflet", "units", "lwgeom", "tidyr", "htmltools"))` *(Note: `tidyverse` was loaded in the script but only `dplyr` and `tidyr` components seemed essential based on the final script. If you use other `tidyverse` functions, add `tidyverse` to the install list).*
 
