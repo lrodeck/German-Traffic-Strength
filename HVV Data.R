@@ -5,7 +5,7 @@ library(sf)
 library(dplyr)
 library(leaflet)
 library(lubridate) # For easier date handling
-
+library(osmdata)
 # --- 1. Define the GTFS data source ---
 # URL provided by the user
 gtfs_url <- "https://daten.transparenz.hamburg.de/Dataport.HmbTG.ZS.Webservice.GetRessource100/GetRessource100.svc/dbe5f144-b806-4377-aac3-d3572b139b23/Upload__hvv_Rohdaten_GTFS_Fpl_20250108.ZIP"
@@ -118,8 +118,24 @@ high_freq_stops_wgs84 <- st_transform(high_freq_stops_sf, wgs84_crs) # Also tran
 all_stops_wgs84 <- st_transform(stops_sf, wgs84_crs) # And all stops for context
 
 # --- 7. Optional: Analyze Coverage by District ---
-# Assuming 'districts_sf' exists from the density analysis step, otherwise load it again.
-# Make sure districts_sf is loaded and valid from previous steps!
+print("Querying OSM for administrative boundaries (Districts)...")
+
+# --- 7a Define Area of Interest (AOI) ---
+aoi_name <- "Hamburg, Germany"
+aoi_bbox <- getbb(aoi_name)
+target_crs <- st_crs(32632) # UTM Zone 32N for Hamburg
+
+districts_osm <- opq(bbox = aoi_bbox) %>%
+  add_osm_feature(key = "admin_level", value = "9") %>% # Stadtteile in Hamburg
+  osmdata_sf()
+
+# Assume multipolygons are returned
+districts_sf <- districts_osm$osm_multipolygons %>%
+  filter(!st_is_empty(.)) %>% # Basic empty check
+  st_make_valid() %>%
+  select(osm_id, name) # Keep only relevant columns
+
+districts_proj <- st_transform(districts_sf, target_crs)
 districts_proj <- st_transform(districts_sf, target_crs) # Project if not already done
 
 districts_proj$district_area_m2 <- as.numeric(st_area(districts_proj))
@@ -204,3 +220,8 @@ pt_map <- pt_map %>%
 
 # Print the map
 print(pt_map)
+
+library(htmlwidgets)
+
+saveWidget(pt_map, file = "Widgets/pt_map.html", selfcontained = TRUE)
+

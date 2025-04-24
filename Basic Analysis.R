@@ -6,7 +6,7 @@ library(dplyr)       # For data manipulation
 library(leaflet)     # For interactive maps
 library(units)       # For handling units explicitly
 library(lwgeom)      # Potentially needed for st_make_valid
-
+extrafonts::loadfonts()
 # Potentially needed for later analysis steps:
 # library(tidytransit) # For GTFS (public transport schedules)
 # library(sfnetworks)  # For network analysis
@@ -15,7 +15,7 @@ library(lwgeom)      # Potentially needed for st_make_valid
 
 # --- 2. Define Area of Interest (AOI) ---
 aoi_name <- "Hamburg, Germany"
-aoi_bbox <- getbb(aoi_name)
+aoi_bbox <- c(9.626770,53.383328,10.351868,53.748711)
 target_crs <- st_crs(32632) # UTM Zone 32N for Hamburg
 
 print(paste("Target CRS:", target_crs$input))
@@ -69,7 +69,7 @@ green_spaces_osm <- opq(bbox = aoi_bbox) %>%
   add_osm_feature(key = "natural", value = c("wood", "scrub", "heath", "grassland")) %>%
   osmdata_sf()
 # Combine polygons and multipolygons directly
-green_spaces_sf <- bind_rows(green_spaces_osm$osm_polygons, green_spaces_osm$osm_multipolygons) %>%
+green_spaces_sf <- green_spaces_osm$osm_polygons %>%
   filter(!st_is_empty(.)) %>% # Basic empty check
   st_make_valid()
 
@@ -78,8 +78,8 @@ print("Querying OSM for building points/nodes...")
 # This queries NODES tagged as buildings, much lighter than polygons.
 # It might miss buildings only mapped as areas.
 buildings_osm_points <- opq(bbox = aoi_bbox) %>%
-  add_osm_feature(key = "building") %>%
-  osmdata_sf(osm_types = "node") # Specify nodes only
+  add_osm_feature(key = "building")%>%
+  osmdata_sf()
 
 building_points_sf <- buildings_osm_points$osm_points %>% filter(!st_is_empty(.)) # Basic empty check
 print(paste("Found", nrow(building_points_sf), "OSM nodes tagged as buildings."))
@@ -369,7 +369,17 @@ map_networks <- leaflet() %>%
   addPolylines(data = cycleways_wgs84, color = "red", weight = 2, group = "Cycleways") %>%
   addPolylines(data = footways_wgs84, color = "darkgreen", weight = 1, opacity = 0.7, group = "Footways") %>%
   addCircleMarkers(data = pt_stops_wgs84, color = "purple", radius = 3, stroke = FALSE, fillOpacity = 0.8, group = "PT Stops",
-                   popup = ~paste("Name:", name, "<br>Type:", ifelse(!is.na(railway), railway, ifelse(!is.na(highway), highway, public_transport)))) %>%
+                   popup = ~paste(  "<div style='background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; font-size: 12px;'>", # Removed font-family for default
+                                  , "Name:"
+                                  , name
+                                  , "<br>Type:"
+                                  , ifelse(!is.na(railway)
+                                           , railway
+                                           , ifelse(!is.na(highway)
+                                                    , highway
+                                                    , public_transport))
+                                  , "</div>")
+                   ) %>%
   addLayersControl(
     baseGroups = c("OSM Base Map", "CartoDB Base Map"),
     overlayGroups = c("Roads (Car)", "Cycleways", "Footways", "PT Stops"),
@@ -422,8 +432,14 @@ add_measure_layer_simple <- function(map, value_col_name, pal, legend_title, gro
 measure_map <- leaflet(data = district_measures_wgs84) %>%
   addTiles(group = "OSM Base Map") %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Base Map") %>%
-  fitBounds(lng1 = aoi_bbox[1,1], lat1 = aoi_bbox[2,1],
-            lng2 = aoi_bbox[1,2], lat2 = aoi_bbox[2,2])
+  setView( lng = 10
+           , lat = 53.4
+           , zoom = 10 ) %>%
+  setMaxBounds( lng1 = 9.626770
+                , lat1 = 53.383328
+                , lng2 = 10.351868
+                , lat2 = 53.748711 
+  )
 
 # Add layers for key measures directly
 measure_map <- measure_map %>%
@@ -459,7 +475,6 @@ print(measure_map)
 
 print("--- Analysis and visualization complete. ---")
 
-# --- 10. Potential Next Steps & KPI Linkages ---
-# Note: Building metric is now density (count/km2), not coverage %.
-# Suggestions remain largely the same, adapt interpretation for building density.
-# Consider limitations of using building points vs footprints.
+library(htmlwidgets)
+
+saveWidget(measure_map, file = "Widgets/measure_map.html", selfcontained = TRUE)
