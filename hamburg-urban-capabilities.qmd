@@ -208,7 +208,6 @@ A choropleth map depicting attractivity index scores across the hex grid enables
 </iframe>
 </html>
 ```
-
 ## Public Transit Accessibility and Spatial Coverage
 
 The GTFS analysis focused on service frequency between 07:00 and 09:00, representing peak commuting hours. A threshold of six departures per hour was used to classify stops as high-frequency. The dataset included 7,122 stops operating within the defined BBOX, out of which 1,798 met the high-frequency criterion.
@@ -225,6 +224,7 @@ The GTFS analysis focused on service frequency between 07:00 and 09:00, represen
 To assess spatial accessibility, 400-meter buffers were generated around each high-frequency stop. These buffers were merged and clipped to the analysis boundary. The result was a contiguous area of approximately 146 km², which reflects well-serviced zones with convenient access to public transport during peak hours.
 
 An analysis of district-level coverage indicated that inner-city areas, including Hamburg-Mitte and Eimsbüttel, had greater than 80% coverage within the clipped buffer area. In contrast, outer districts such as Harburg and Bergedorf had significantly lower coverage, often falling below 50%. These disparities underscore a spatial mismatch between transit service levels and urban expansion, suggesting the need for targeted mobility improvements in peripheral neighborhoods.
+
 ```{=html}
 <iframe
   id="inlineFrameExample"
@@ -236,8 +236,6 @@ An analysis of district-level coverage indicated that inner-city areas, includin
 </iframe>
 </html>
 ```
-
-
 ## Walking Isochrone Accessibility from Transit Hubs
 
 To evaluate last-mile accessibility and pedestrian reach, we computed walking isochrones from major transport hubs, including Hamburg Hauptbahnhof and Jungfernstieg. Isochrones were generated for 5-, 10-, and 15-minute intervals, using average pedestrian speed assumptions.
@@ -245,7 +243,6 @@ To evaluate last-mile accessibility and pedestrian reach, we computed walking is
 The analysis shows that in a 5-minute walk, individuals can access an average distance of approximately 185 meters. This increases to around 460 meters for 10 minutes and nearly 700 meters for 15 minutes. Maximum walking distances within these intervals reach up to 950 meters in favorable conditions. These values were consistent across hubs, indicating a generally compact and walkable core area in central Hamburg.
 
 These results tie into the broader concept of **walkability**, which refers to how conducive an environment is to walking. Key elements include the presence and connectivity of sidewalks, pedestrian-friendly infrastructure, proximity to key services and amenities, and safety. In our case, walkability is measured both by the spatial distribution of amenities within close walking distances and the temporal reach from transport nodes. The isochrone maps demonstrate how far an average pedestrian can move within a given time frame, while the attractivity index integrates this with destination density.
-
 
 Thus, the combination of hexagon-level amenity scoring and radial isochrones enables us to understand walkability both from a network accessibility and land-use intensity perspective. The areas with high overlap between high attractivity and broad walkable reach from major hubs reflect superior pedestrian-oriented planning. In contrast, hexagons with fewer reachable destinations or isolated amenities highlight potential urban gaps.
 
@@ -260,9 +257,7 @@ Importantly, walkability does not exist in isolation but is deeply augmented by 
   src="Widgets/info-card-walk.html">
 </iframe>
 ```
-
 This integration creates a layered mobility environment, often referred to as the "walk-and-ride" dynamic, in which urban areas combine the advantages of compact pedestrian districts with the time-efficiency of public transport. In the case of Hamburg, zones such as Hauptbahnhof and Jungfernstieg illustrate this concept well. These hubs not only provide the geographic core of the network but also maximize access to a diversity of amenities within both walking and transit-enabled isochrones. The outcome is a kind of urban permeability that enhances both equity and sustainability.
-
 
 ```{=html}
 <iframe
@@ -283,9 +278,26 @@ By combining attractivity scores with transit accessibility, a more nuanced view
 
 However, some areas with mid-to-high attractivity scores are underserved by frequent transit. These may be undergoing recent development or may suffer from historical underinvestment. Identifying and prioritizing these spatial gaps is crucial for equitable city planning.
 
-Cross-referencing hexagon scores and buffer zones in a spatial overlay or categorical heatmap can visually highlight these disparities. Additionally, plotting index distributions inside versus outside the serviced buffer area can quantify how transport infrastructure influences overall urban quality.
+Cross-referencing hexagon scores and buffer zones in a spatial overlay or categorical heatmap can visually highlight these disparities. Additionally, plotting index distributions inside versus outside the serviced buffer area can quantify how transport infrastructure influences overall urban quality. 
+
+::: columns 
+::: column 
 
 The findings of this analysis point to several key areas for action. Firstly, high-attractivity zones should be preserved and enhanced through planning measures that limit overdevelopment while supporting quality of life. Secondly, transit service upgrades should focus on districts with relatively poor buffer coverage and rising land-use intensity. Thirdly, integrating walkability assessments with transport access can help optimize the placement of new services and ensure equitable access.
 
-Ultimately, the hex-based spatial approach presented here offers a flexible and data-rich foundation for urban diagnostics, investment prioritization, and long-term monitoring of city performance.
+Ultimately, the hex-based spatial approach presented here offers a flexible and data-rich foundation for urban diagnostics, investment prioritization, and long-term monitoring of city performance. 
 
+::: 
+:::column
+
+```{=html}
+<iframe
+  id="inlineFrameExample"
+  width="300"
+  height="380"
+  align="auto"
+  src="Widgets/info-card-gh.html">
+</iframe>
+```
+::: 
+:::

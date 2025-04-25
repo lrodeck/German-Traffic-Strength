@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Link Card</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            /* Example background for context - can be removed if embedding */
+            background-color: #f0f0f0;
+            color: #111827;
+            padding: 2rem; /* Add padding for standalone view */
+            display: flex; /* Center card for standalone view */
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Use Bebas Neue for titles */
+        h2, .card-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em;
+        }
+
+        /* Neo-Brutalist Card Style */
+        .infographic-card {
+            /* Example background - change as needed */
+            background-color: #e0e7ff; /* Indigo-100 */
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #4338ca; /* Indigo-700 shadow */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+            max-width: 350px; /* Max width */
+            width: 100%; /* Responsive width */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center content */
+            text-align: center;
+        }
+
+        /* Hover effect for card */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #111827 !important; /* Black shadow on hover */
+        }
+
+        /* Icon style */
+        .icon-style {
+            color: #111827;
+            margin-bottom: 1rem; /* Space below icon */
+        }
+
+        /* Link styling */
+        .github-link {
+            display: inline-block; /* Allow padding and border */
+            margin-top: 1rem; /* Space above link */
+            padding: 0.5rem 1.5rem;
+            background-color: #fde047; /* Yellow bg */
+            color: #111827; /* Black text */
+            border: 2px solid #111827;
+            box-shadow: 2px 2px 0px #111827;
+            text-decoration: none; /* Remove underline */
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 0.05em;
+            font-size: 1.1rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+        .github-link:hover {
+            background-color: #facc15; /* Darker yellow */
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #111827;
+        }
+        .github-link i {
+             margin-right: 0.5rem; /* Space between icon and text */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="infographic-card">
+        <h2 class="text-2xl text-gray-800 mb-4 card-title">
+            Project Repository
+        </h2>
+        <i class="fab fa-github icon-style text-6xl"></i>
+        <p class="text-gray-700">
+            Find the source code, documentation, and data on GitHub.
+        </p>
+        <a href="https://github.com/lrodeck/German-Traffic-Strength" target="_blank" rel="noopener noreferrer" class="github-link">
+             View on GitHub
+        </a>
+    </div>
+
+</body>
+</html>
