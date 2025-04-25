@@ -1,0 +1,198 @@
+---
+title: "Exploring Hamburg’s Urban Capabilities: A Data-Driven Dive into Attractivity and Accessibility"
+bibliography: References/references.bib
+format: html
+editor: visual
+---
+
+Hamburg, Germany's second-largest city and a major hub for culture, commerce, and innovation, presents a fascinating case study in urban form and function. As cities globally grapple with how to best serve their residents—balancing livability, sustainability, and mobility—Hamburg offers a rich canvas of infrastructure, green spaces, and transportation systems worth analyzing in detail.
+
+In this project, we explore the urban capabilities of Hamburg through the lens of **spatial accessibility and attractivity**. Using a hexagonal grid system layered over the city and enriched with live OpenStreetMap data, we evaluate how different areas of Hamburg perform across key dimensions: proximity to parks and major transit hubs, the density of public transport stops, and the availability of urban amenities like bars, restaurants, and leisure spaces.
+
+Our analysis culminates in a composite **Attractivity Index**, a customizable metric designed to encapsulate the urban appeal of each neighborhood-level hexagon. This index helps reveal spatial patterns—highlighting clusters of urban vitality as well as underserved areas—through interactive visualizations and detailed geospatial metrics.
+
+Additionally, we integrate public transport schedule data (GTFS) to assess real-world service frequency and district-level coverage, further grounding our analysis in the lived experience of Hamburg's mobility landscape.
+
+Whether you're an urbanist, policymaker, or simply curious about how cities function, this analysis aims to make Hamburg's urban DNA both visible and actionable. Read on to discover how the city's features come together to shape where people want to live, move, and spend their time.
+
+## 📘 Literature Review: Foundations and Contemporary Perspectives in Urban Design
+
+### Introduction
+
+Urban design is an interdisciplinary field that shapes the physical setting for life in cities, towns, and villages. It integrates elements from architecture, landscape architecture, and urban planning to create functional and aesthetically pleasing urban environments. Over time, various theories and approaches have emerged, reflecting the evolving needs and values of societies.
+
+### Historical Foundations
+
+The formal study of urban design gained prominence in the mid-20th century. The 1956 Harvard Conference is often cited as a pivotal moment, marking the delineation of urban design as a distinct discipline [@sciencedirect2023].
+
+> "Urban design emerged as a distinct field in the mid-20th century, emphasizing the importance of spatial organization, human scale, and the integration of public spaces."
+
+### Key Theoretical Contributions
+
+Several scholars have significantly influenced urban design theory:
+
+-   **Kevin Lynch** introduced concepts like "imageability" and "legibility," emphasizing how individuals perceive and navigate urban environments [@lynch1960].
+
+-   **Jane Jacobs** championed the idea of "eyes on the street," advocating for mixed-use developments and vibrant street life to enhance safety and community engagement [@jacobs1961].
+
+-   **Christopher Alexander** proposed a pattern language for design, focusing on recurring solutions to common design problems [@alexander1977].
+
+-   **Nikos Salingaros** applied principles from mathematics and physics to urban morphology, exploring concepts like fractals and networks in city structures [@salingaros2005].
+
+> "The structure of urban space can be understood through mathematical principles, revealing patterns that contribute to the vitality of cities." [@salingaros2005]
+
+### Contemporary Approaches
+
+Modern urban design theories address current challenges and aspirations:
+
+-   **New Urbanism** promotes walkable neighborhoods, mixed-use development, and traditional architectural styles [@duany2000].
+
+-   **Landscape Urbanism** views landscape as the primary framework for urban development, emphasizing ecological processes and the integration of natural systems [@waldheim2006].
+
+-   **Everyday Urbanism** focuses on the informal, often overlooked aspects of urban life, highlighting the significance of daily practices and user-generated spaces [@crawford2008].
+
+-   **Tactical Urbanism** involves temporary, low-cost interventions aimed at improving urban spaces and fostering community engagement [@lydon2015].
+
+-   **Sustainable Urbanism** integrates environmental considerations into urban planning, aiming for resource efficiency and reduced ecological footprints [@farr2008].
+
+> "Sustainable urbanism seeks to create environments that are not only livable but also resilient and environmentally responsible." [@farr2008]
+
+### Ecological and Resilient Design
+
+The increasing awareness of environmental issues has led to a focus on ecological urban planning. This approach emphasizes the integration of natural systems, biodiversity, and resilience into urban development. Key themes include ecosystem services, green infrastructure, and socio-ecological systems [@revi2019].
+
+> "Ecological urban planning integrates natural processes into the urban fabric, promoting sustainability and resilience." [@revi2019]
+
+### Principles of Intelligent Urbanism
+
+Christopher Charles Benninger's "Principles of Intelligent Urbanism" outlines ten axioms for sustainable and equitable urban development. These principles advocate for environmental sustainability, social equity, and cultural sensitivity in urban planning [@benninger2001].
+
+> "Intelligent urbanism is guided by principles that ensure cities are livable, equitable, and sustainable." [@benninger2001]
+
+Urban design continues to evolve, incorporating diverse perspectives and addressing complex challenges. By understanding its theoretical foundations and contemporary approaches, practitioners can create urban environments that are functional, sustainable, and responsive to the needs of their inhabitants.
+
+## 🔬 Methodology
+
+This methodology outlines the process of evaluating Hamburg's urban capabilities using spatial data, geospatial analysis, and interactive visualization techniques. The goal was to quantify urban attractivity and transit accessibility through a reproducible workflow based in R.
+
+### 📦 Data Sources
+
+We used a combination of open spatial data and transit schedules to form the basis of our analysis:
+
+-   **OpenStreetMap (OSM):** Leveraged via the `osmdata` R package to obtain geospatial data on amenities, parks, transport stations, and infrastructure.
+
+    **GTFS Data:** General Transit Feed Specification files from HVV (Hamburg public transport authority), used to assess transit service frequency.
+
+-   **Administrative Boundaries:** Queried from OSM to enable spatial aggregation by districts.
+
+All spatial data was reprojected to UTM Zone 32N (EPSG:32632) to ensure metric accuracy.
+
+### 🌍 Spatial Framework and Area of Interest
+
+We defined the area of interest (AOI) using a bounding box centered on the main urban area of Hamburg:
+
+```         
+bbox <- c(xmin = 9.626770, ymin = 53.383328, xmax = 10.351868, ymax = 53.748711) aoi <- st_as_sfc(st_bbox(bbox), crs = 4326) aoi_proj <- st_transform(aoi, 32632) 
+```
+
+A **hexagonal grid** of \~1 km cell size was overlaid on the projected AOI to provide a consistent unit of analysis:
+
+```         
+hex_grid <- st_make_grid(aoi_proj, cellsize = 1000, square = FALSE) hex_sf <- st_sf(geometry = hex_grid) 
+```
+
+This approach allows aggregation and comparison across evenly distributed spatial units.
+
+### 🌿 OSM Feature Extraction
+
+Using `osmdata`, we queried various features relevant to urban attractivity:
+
+-    **Parks and Green Spaces:** Tags such as `leisure=park`, `natural=wood`, `landuse=recreation_ground`.
+
+-   **Hamburg Hauptbahnhof:** Queried explicitly by name and function (`railway=station`).
+
+-   **Leisure and Amenity POIs:** Including `amenity=bar`, `amenity=restaurant`, `leisure=*`.
+
+-   **Transport Stops:** `highway=bus_stop` and `station=subway`.
+
+All features were filtered, validated, and transformed to the target CRS.
+
+### 📊 Metrics per Hexagon
+
+We computed two types of metrics for each hexagon:
+
+#### 1. **Proximity Metrics**
+
+-    Distance to the nearest park and Hamburg Hbf.
+
+-   Calculated using `st_distance()` on centroid coordinates.
+
+```         
+hex_centroids <- st_centroid(hex_sf) hex_sf$dist_park_m <- st_distance(hex_centroids, parks_union_proj)[, 1] 
+```
+
+#### 2. **Density Metrics**
+
+-   Count of POIs (bars, restaurants, leisure, stops) within each hexagon.
+
+-   Implemented using `st_join()` and aggregated with `dplyr::count()`.
+
+```         
+bars_in_hex <- st_join(bars_proj, hex_sf, join = st_within) bar_counts <- bars_in_hex %>% count(hex_id) 
+```
+
+### 📈 Attractivity Index Calculation
+
+Each metric was normalized (min-max) and aggregated into a composite score with weighted contributions. Distance metrics were inverted so that higher values reflect closer proximity.
+
+```         
+normalize <- function(x) (x - min(x)) / (max(x) - min(x)) hex_sf <- hex_sf %>% mutate(   bar_score = normalize(bar_count),   park_score = 1 - normalize(dist_park_m),   attractivity_index = 0.15 * bar_score + 0.15 * park_score + ... ) 
+```
+
+Weights were chosen based on assumed user preferences but can be customized in the script.
+
+### 🚌 Transit Frequency and Accessibility
+
+To assess mobility, we parsed HVV GTFS data with `tidytransit` and calculated:
+
+-    **Peak-hour frequency:** Number of departures per stop between 7:00 and 9:00.
+
+-    **High-frequency classification:** Stops with ≥6 departures/hour.
+
+-   **Service coverage:** Area within 400m of high-frequency stops, clipped to the AOI.
+
+```         
+high_freq_stops <- stop_freq %>% filter(departures_per_hr >= 6) service_area <- st_buffer(high_freq_stops_proj, 400) %>% st_union() 
+```
+
+### 🌎 District-Level Aggregation
+
+To support interpretation by policymakers, we joined calculated metrics to administrative districts:
+
+-   **Proportions:** % of area covered by public transport or green space buffers.
+
+-   **Densities:** POIs, stops, buildings per km².
+
+-   **Ratios:** e.g., cycleway-to-road network length.
+
+```         
+district_measures <- districts %>%   left_join(aggregated_counts) %>%   mutate(road_density_km_km2 = road_length / area_km2) 
+```
+
+### 🎭 Interactive Visualization
+
+We used the `leaflet` package to display:
+
+-    **Choropleth map** of attractivity index.
+
+-   **Toggleable layers** for transit stops, service buffers, and coverage statistics.
+
+-   **On-map explanations** with weighted metric breakdowns.
+
+```         
+leaflet(hex_sf) %>%   addPolygons(fillColor = ~pal_index(attractivity_index), ...) 
+```
+
+Results are presented through a user-friendly map interface, allowing for hover and click interactions with each hexagon.
+
+This methodology combines geospatial analysis, open data, and reproducible R workflows to assess urban attractivity and transit accessibility in Hamburg. By structuring the city into hexagonal units, we enable precise, scalable, and interpretable spatial evaluations suitable for planning and policy discussions.

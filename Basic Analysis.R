@@ -51,10 +51,8 @@ footways_sf <- footways_osm$osm_lines %>% filter(!st_is_empty(.)) # Basic empty 
 
 # Example: Get Public Transport Stops (basic infrastructure)
 print("Querying OSM for public transport stops...")
-pt_stops_osm <- opq(bbox = aoi_bbox) %>%
+pt_stops_bus_osm <- opq(bbox = aoi_bbox) %>%
   add_osm_feature(key = "public_transport", value = c("stop_position", "platform", "station")) %>%
-  add_osm_feature(key = "highway", value = "bus_stop") %>%
-  add_osm_feature(key = "railway", value = c("stop", "station", "tram_stop", "halt")) %>%
   osmdata_sf()
 # Assume points are returned
 pt_stops_sf <- pt_stops_osm$osm_points %>% filter(!st_is_empty(.)) # Basic empty check
@@ -65,13 +63,15 @@ pt_stops_sf <- pt_stops_osm$osm_points %>% filter(!st_is_empty(.)) # Basic empty
 print("Querying OSM for green spaces...")
 green_spaces_osm <- opq(bbox = aoi_bbox) %>%
   add_osm_feature(key = "leisure", value = c("park", "nature_reserve", "playground", "garden", "dog_park")) %>%
-  add_osm_feature(key = "landuse", value = c("forest", "grass", "greenfield", "recreation_ground")) %>%
-  add_osm_feature(key = "natural", value = c("wood", "scrub", "heath", "grassland")) %>%
+  # add_osm_feature(key = "landuse", value = c("forest", "grass", "greenfield", "recreation_ground")) %>%
+  # add_osm_feature(key = "natural", value = c("wood", "scrub", "heath", "grassland")) %>%
   osmdata_sf()
+
 # Combine polygons and multipolygons directly
-green_spaces_sf <- green_spaces_osm$osm_polygons %>%
+green_spaces_sf <- green_spaces_osm$osm_polygons  %>%
   filter(!st_is_empty(.)) %>% # Basic empty check
   st_make_valid()
+
 
 # Get Building *Points* (Alternative to heavy footprint download)
 print("Querying OSM for building points/nodes...")
@@ -81,7 +81,7 @@ buildings_osm_points <- opq(bbox = aoi_bbox, osm_types = "node") %>%
   add_osm_feature(key = "building")%>%
   osmdata_sf()
 
-building_points_sf <- buildings_osm_points %>% filter(!st_is_empty(.)) # Basic empty check
+building_points_sf <- buildings_osm_points$osm_points %>% filter(!st_is_empty(.)) # Basic empty check
 print(paste("Found", nrow(building_points_sf), "OSM nodes tagged as buildings."))
 
 
@@ -219,7 +219,8 @@ districts_building_counts <- count_points_in_polygons_simple(building_points_pro
 # Combine all calculated measures into one sf object
 # Start with the base district geometry and area
 district_measures <- districts_proj %>%
-  select(unique_district_id, name, district_area_m2, district_area_km2, geometry)
+  select(unique_district_id, name, district_area_m2, district_area_km2, geometry)%>%
+  filter(name %in% c("Bergedorf", "Harburg", "Hamburg-Mitte", "Altona", "Eimsbüttel", "Hamburg-Nord", "Wandsbek"))
 
 # Join lengths
 district_measures <- district_measures %>%
@@ -269,12 +270,12 @@ district_measures <- district_measures %>%
     # building_coverage_ratio_pct = drop_units(building_area_m2 / district_area_m2) * 100, # REMOVED
     
     # Infrastructure Ratios
-    cycle_to_road_ratio = ifelse(drop_units(road_length_m) > 0, drop_units(cycle_length_m / road_length_m), 0),
-    foot_to_road_ratio = ifelse(drop_units(road_length_m) > 0, drop_units(foot_length_m / road_length_m), 0),
+    cycle_to_road_ratio = ifelse(road_length_m > 0, cycle_length_m / road_length_m, 0),
+    foot_to_road_ratio = ifelse(road_length_m > 0, foot_length_m / road_length_m, 0),
     active_transport_density_km_km2 = cycle_density_km_km2 + foot_density_km_km2
   ) %>%
   # Handle potential division by zero if area is 0
-  mutate(across(where(is.numeric) & !is.geometry, ~ifelse(is.infinite(.), 0, .))) %>% # Replace Inf with 0
+  #mutate(across(where(is.numeric) & !is.geometry, ~ifelse(is.infinite(.), 0, .))) %>% # Replace Inf with 0
   mutate(across(ends_with("_km2") | ends_with("_pct"), ~ifelse(drop_units(district_area_m2) == 0, 0, .)))
 
 
@@ -360,33 +361,44 @@ cycleways_wgs84 <- st_transform(cycleways_sf, 4326)
 footways_wgs84 <- st_transform(footways_sf, 4326)
 pt_stops_wgs84 <- st_transform(pt_stops_sf, 4326)
 
+
 # Map creation assumes data exists
 map_networks <- leaflet() %>%
   addTiles(group = "OSM Base Map") %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Base Map") %>%
-  fitBounds(lng1 = aoi_bbox[1,1], lat1 = aoi_bbox[2,1],
-            lng2 = aoi_bbox[1,2], lat2 = aoi_bbox[2,2]) %>%
   addPolylines(data = roads_wgs84, color = "grey", weight = 1, group = "Roads (Car)", popup = ~paste("Type:", highway)) %>%
-  addPolylines(data = cycleways_wgs84, color = "red", weight = 2, group = "Cycleways") %>%
-  addPolylines(data = footways_wgs84, color = "darkgreen", weight = 1, opacity = 0.7, group = "Footways") %>%
-  addCircleMarkers(data = pt_stops_wgs84, color = "purple", radius = 3, stroke = FALSE, fillOpacity = 0.8, group = "PT Stops",
-                   popup = ~paste(  "<div style='background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; font-size: 12px;'>", # Removed font-family for default
+  addPolylines(data = cycleways_wgs84, color = "#FF69B4", weight = 2, group = "Cycleways") %>%
+  addPolylines(data = footways_wgs84, color = "#90EE90", weight = 1, opacity = 0.7, group = "Footways") %>%
+  addCircleMarkers(data = pt_stops_wgs84, color = "9723c9", radius = 3, stroke = FALSE, fillOpacity = 0.8, group = "PT Stops",
+                   popup = ~paste(  "<div style='background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; font-size: 12px;'>" # Removed font-family for default
                                   , "Name:"
                                   , name
                                   , "<br>Type:"
-                                  , ifelse(!is.na(railway)
-                                           , railway
-                                           , ifelse(!is.na(highway)
+                                  , ifelse(!is.na(highway)
                                                     , highway
-                                                    , public_transport))
+                                                    , public_transport)
                                   , "</div>")
                    ) %>%
   addLayersControl(
     baseGroups = c("OSM Base Map", "CartoDB Base Map"),
     overlayGroups = c("Roads (Car)", "Cycleways", "Footways", "PT Stops"),
     options = layersControlOptions(collapsed = FALSE)
+  )%>%
+  setView( lng = 10
+           , lat = 53.4
+           , zoom = 10 ) %>%
+  setMaxBounds( lng1 = 9.626770
+                , lat1 = 53.383328
+                , lng2 = 10.351868
+                , lat2 = 53.748711 
   )
-# print(map_networks) # Uncomment to display
+
+print(map_networks) # Uncomment to display
+
+library(htmlwidgets)
+
+saveWidget(map_networks, file = "Widgets/map_networks.html", selfcontained = TRUE)
+
 
 # --- 9b. Visualize Calculated Measures/Densities ---
 print("Creating Leaflet density/measure map...")
@@ -394,45 +406,24 @@ print("Creating Leaflet density/measure map...")
 # Direct transform
 district_measures_wgs84 <- st_transform(district_measures, crs = st_crs(4326))
 
-# Simplified palette creator (less robust to NA/single values but shorter)
-create_palette_simple <- function(domain, palette = "viridis", rev = FALSE) {
-  colorNumeric(palette = palette, domain = domain, na.color = "#bdbdbd", reverse = rev)
-}
-
-# Create palettes directly, assuming columns exist and have valid domains
-pal_road_den <- create_palette_simple(district_measures_wgs84$road_density_km_km2)
-pal_cycle_den <- create_palette_simple(district_measures_wgs84$cycle_density_km_km2)
-pal_foot_den <- create_palette_simple(district_measures_wgs84$foot_density_km_km2)
-pal_pt_stop_den <- create_palette_simple(district_measures_wgs84$pt_stop_density_per_km2)
-pal_poi_den <- create_palette_simple(district_measures_wgs84$poi_density_per_km2)
-pal_green_ratio <- create_palette_simple(district_measures_wgs84$green_space_ratio_pct)
-pal_bldg_den <- create_palette_simple(district_measures_wgs84$building_density_per_km2) # New palette
-pal_cycle_road_ratio <- create_palette_simple(district_measures_wgs84$cycle_to_road_ratio, palette="RdYlBu")
-pal_pt_coverage <- create_palette_simple(district_measures_wgs84$pt_coverage_ratio_pct)
-pal_green_access <- create_palette_simple(district_measures_wgs84$green_access_coverage_ratio_pct)
+pal_road_den <- colorQuantile("YlOrRd", domain = district_measures_wgs84$road_density_km_km2, n = 4, na.color = "#bdbdbd")
+pal_cycle_den <- colorQuantile("Greens", domain = district_measures_wgs84$cycle_density_km_km2, n = 4, na.color = "#bdbdbd")
+pal_foot_den <- colorQuantile("Greens", domain = district_measures_wgs84$foot_density_km_km2, n = 4, na.color = "#bdbdbd")
+pal_pt_stop_den <- colorQuantile("Purples", domain = district_measures_wgs84$pt_stop_density_per_km2, n = 4, na.color = "#bdbdbd")
+pal_poi_den <- colorQuantile("Oranges", domain = district_measures_wgs84$poi_density_per_km2, n = 4, na.color = "#bdbdbd")
+pal_green_ratio <- colorQuantile("BuGn", domain = district_measures_wgs84$green_space_ratio_pct, n = 4, na.color = "#bdbdbd")
+pal_bldg_den <- colorQuantile("Blues", domain = district_measures_wgs84$building_density_per_km2, n = 4, na.color = "#bdbdbd")
+pal_cycle_road_ratio <- colorQuantile("BuGn", domain = district_measures_wgs84$cycle_to_road_ratio, n = 4, na.color = "#bdbdbd")
+pal_pt_coverage <- colorQuantile("Blues", domain = district_measures_wgs84$pt_coverage_ratio_pct, n = 4, na.color = "#bdbdbd")
+pal_green_access <- colorQuantile("YlGn", domain = district_measures_wgs84$green_access_coverage_ratio_pct, n = 4, na.color = "#bdbdbd")
 
 
-# Simplified function to add layers
-add_measure_layer_simple <- function(map, value_col_name, pal, legend_title, group_name) {
-  value_formula <- as.formula(paste0("~", value_col_name))
-  label_formula <- as.formula(paste0("~paste(name, ': ', round(", value_col_name, ", 2))"))
-  
-  map %>% addPolygons(
-    fillColor = ~pal(eval(value_formula)),
-    weight = 1, opacity = 1, color = "white", dashArray = "3", fillOpacity = 0.7,
-    highlightOptions = highlightOptions(weight = 3, color = "#666", dashArray = "", fillOpacity = 0.7, bringToFront = TRUE),
-    label = label_formula,
-    labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "15px", direction = "auto"),
-    group = group_name
-  ) %>%
-    addLegend(pal = pal, values = value_formula, opacity = 0.7, title = legend_title,
-              position = "bottomright", group = group_name)
-}
+
 
 # Create Leaflet map
 measure_map <- leaflet(data = district_measures_wgs84) %>%
-  addTiles(group = "OSM Base Map") %>%
   addProviderTiles(providers$CartoDB.Positron, group = "CartoDB Base Map") %>%
+  addTiles(group = "OSM Base Map") %>%
   setView( lng = 10
            , lat = 53.4
            , zoom = 10 ) %>%
@@ -443,17 +434,138 @@ measure_map <- leaflet(data = district_measures_wgs84) %>%
   )
 
 # Add layers for key measures directly
+# --- Road Density ---
 measure_map <- measure_map %>%
-  add_measure_layer_simple("road_density_km_km2", pal_road_den, "Road Dens.<br>(km/km²)", "Road Density") %>%
-  add_measure_layer_simple("cycle_density_km_km2", pal_cycle_den, "Cycle Dens.<br>(km/km²)", "Cycleway Density") %>%
-  add_measure_layer_simple("foot_density_km_km2", pal_foot_den, "Footway Dens.<br>(km/km²)", "Footway Density") %>%
-  add_measure_layer_simple("pt_stop_density_per_km2", pal_pt_stop_den, "PT Stop Dens.<br>(stops/km²)", "PT Stop Density") %>%
-  add_measure_layer_simple("poi_density_per_km2", pal_poi_den, "POI Dens.<br>(POIs/km²)", "POI Density") %>%
-  add_measure_layer_simple("green_space_ratio_pct", pal_green_ratio, "Green Space<br>(%)", "Green Space Ratio") %>%
-  add_measure_layer_simple("building_density_per_km2", pal_bldg_den, "Building Dens.<br>(bldgs/km²)", "Building Density") %>% # Updated layer
-  add_measure_layer_simple("cycle_to_road_ratio", pal_cycle_road_ratio, "Cycle/Road<br>Ratio", "Cycle/Road Ratio") %>%
-  add_measure_layer_simple("pt_coverage_ratio_pct", pal_pt_coverage, paste0("PT Access<br>(% Area within ", buffer_dist_m, "m)"), "PT Access Coverage") %>%
-  add_measure_layer_simple("green_access_coverage_ratio_pct", pal_green_access, paste0("Green Access<br>(% Area within ", buffer_dist_green_m, "m)"), "Green Access Coverage")
+  addPolygons(
+    fillColor = ~pal_road_den(road_density_km_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(road_density_km_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Road Density"
+  ) %>%
+  addLegend(pal = pal_road_den, values = ~road_density_km_km2, opacity = 0.7,
+            title = "Road Dens.<br>(km/km²)", position = "bottomright", group = "Road Density")
+
+# --- Cycleway Density ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_cycle_den(cycle_density_km_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(cycle_density_km_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Cycleway Density"
+  ) %>%
+  addLegend(pal = pal_cycle_den, values = ~cycle_density_km_km2, opacity = 0.7,
+            title = "Cycle Dens.<br>(km/km²)", position = "bottomright", group = "Cycleway Density")
+
+# --- Footway Density ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_foot_den(foot_density_km_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(foot_density_km_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Footway Density"
+  ) %>%
+  addLegend(pal = pal_foot_den, values = ~foot_density_km_km2, opacity = 0.7,
+            title = "Footway Dens.<br>(km/km²)", position = "bottomright", group = "Footway Density")
+
+# --- PT Stop Density ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_pt_stop_den(pt_stop_density_per_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(pt_stop_density_per_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "PT Stop Density"
+  ) %>%
+  addLegend(pal = pal_pt_stop_den, values = ~pt_stop_density_per_km2, opacity = 0.7,
+            title = "PT Stop Dens.<br>(stops/km²)", position = "bottomright", group = "PT Stop Density")
+
+# --- POI Density ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_poi_den(poi_density_per_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(poi_density_per_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Amenity Density"
+  ) %>%
+  addLegend(pal = pal_poi_den, values = ~poi_density_per_km2, opacity = 0.7,
+            title = "Amenity Dens.<br>(Amenities/km²)", position = "bottomright", group = "POI Density")
+
+# --- Green Space Ratio ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_green_ratio(green_space_ratio_pct),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(green_space_ratio_pct, 1), "%"),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Green Space Ratio"
+  ) %>%
+  addLegend(pal = pal_green_ratio, values = ~green_space_ratio_pct, opacity = 0.7,
+            title = "Green Space<br>(%)", position = "bottomright", group = "Green Space Ratio")
+
+# --- Building Density ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_bldg_den(building_density_per_km2),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(building_density_per_km2, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Building Density"
+  ) %>%
+  addLegend(pal = pal_bldg_den, values = ~building_density_per_km2, opacity = 0.7,
+            title = "Building Dens.<br>(bldgs/km²)", position = "bottomright", group = "Building Density")
+
+# --- Cycle/Road Ratio ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_cycle_road_ratio(cycle_to_road_ratio),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(cycle_to_road_ratio, 2)),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Cycle/Road Ratio"
+  ) %>%
+  addLegend(pal = pal_cycle_road_ratio, values = ~cycle_to_road_ratio, opacity = 0.7,
+            title = "Cycle/Road<br>Ratio", position = "bottomright", group = "Cycle/Road Ratio")
+
+# --- PT Access Coverage ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_pt_coverage(pt_coverage_ratio_pct),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(pt_coverage_ratio_pct, 1), "%"),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "PT Access Coverage"
+  ) %>%
+  addLegend(pal = pal_pt_coverage, values = ~pt_coverage_ratio_pct, opacity = 0.7,
+            title = paste0("PT Access<br>(% Area within ", buffer_dist_m, "m)"),
+            position = "bottomright", group = "PT Access Coverage")
+
+# --- Green Access Coverage ---
+measure_map <- measure_map %>%
+  addPolygons(
+    fillColor = ~pal_green_access(green_access_coverage_ratio_pct),
+    weight = 1, color = "white", fillOpacity = 0.7,
+    highlightOptions = highlightOptions(weight = 3, color = "#666", fillOpacity = 0.7, bringToFront = TRUE),
+    label = ~paste(name, ": ", round(green_access_coverage_ratio_pct, 1), "%"),
+    labelOptions = labelOptions(padding = "3px 8px", textsize = "15px"),
+    group = "Green Access Coverage"
+  ) %>%
+  addLegend(pal = pal_green_access, values = ~green_access_coverage_ratio_pct, opacity = 0.7,
+            title = paste0("Green Access<br>(% Area within ", buffer_dist_green_m, "m)"),
+            position = "bottomright", group = "Green Access Coverage")
+
 
 # Define overlay groups
 overlay_groups <- c("Road Density", "Cycleway Density", "Footway Density",
@@ -464,7 +576,7 @@ overlay_groups <- c("Road Density", "Cycleway Density", "Footway Density",
 # Add Layer Controls
 measure_map <- measure_map %>%
   addLayersControl(
-    baseGroups = c("OSM Base Map", "CartoDB Base Map"),
+    baseGroups = c("CartoDB Base Map", "OSM Base Map"),
     overlayGroups = overlay_groups,
     options = layersControlOptions(collapsed = TRUE)
   ) %>%
@@ -479,3 +591,84 @@ print("--- Analysis and visualization complete. ---")
 library(htmlwidgets)
 
 saveWidget(measure_map, file = "Widgets/measure_map.html", selfcontained = TRUE)
+
+
+# --- Create Elaborate Summary Table ---
+
+# Ensure necessary libraries are loaded
+library(dplyr)
+library(sf)
+library(units)
+library(tibble) # For nice printing format
+
+# --- Configuration ---
+# Set the number of decimal places for rounding numeric values
+rounding_digits <- 2
+
+# --- Processing ---
+# Make sure the 'district_measures' sf object exists and has data
+if (exists("district_measures") && inherits(district_measures, "sf") && nrow(district_measures) > 0) {
+  
+  print("Generating summary table from 'district_measures'...")
+  
+  # 1. Drop the geometry column as it's not needed for the table
+  summary_data <- st_drop_geometry(district_measures)
+  
+  # 2. Select, Rename, and Format Columns
+  summary_table <- summary_data %>%
+    # Select the most relevant columns for the summary
+    select(
+      # Identifiers
+      District = name,
+      
+      # Basic Measures
+      `Area (km²)` = district_area_km2, # Keep original name descriptive
+      
+      # Network Densities (km/km²)
+      `Road Density (km/km²)` = road_density_km_km2,
+      `Cycleway Density (km/km²)` = cycle_density_km_km2,
+      `Footway Density (km/km²)` = foot_density_km_km2,
+      `Active Transport Density (km/km²)` = active_transport_density_km_km2, # Combined cycle + foot
+      
+      # Point Densities (per km²)
+      `PT Stop Density (stops/km²)` = pt_stop_density_per_km2,
+      `POI Density (POIs/km²)` = poi_density_per_km2,
+      
+      # Area Ratios (%)
+      `Green Space Ratio (%)` = green_space_ratio_pct,
+      
+      # Infrastructure Ratios (unitless)
+      `Cycleway-to-Road Ratio` = cycle_to_road_ratio,
+      
+      # Accessibility Coverage Ratios (%)
+      `PT Access Coverage (%)` = pt_coverage_ratio_pct, # Area within 400m of PT stop
+      `Green Access Coverage (%)` = green_access_coverage_ratio_pct # Area within 300m of Green Space
+    ) %>%
+    # 3. Handle 'units' objects explicitly if they remain (Area should be the main one)
+    # Use mutate(across(...)) to apply drop_units safely to any column that might still have them
+    #mutate(across(where(is.units), units::drop_units)) %>%
+    
+    # 4. Round all numeric columns to the specified number of digits
+    mutate(across(where(is.numeric), ~ round(., digits = rounding_digits))) %>%
+    
+    # 5. Arrange alphabetically by District name for easy reading
+    arrange(District)
+  
+  # --- Output ---
+  print("Summary Table Generated:")
+  # Print using as_tibble for a clean console output
+  print(as_tibble(summary_table), n = nrow(summary_table)) # Print all rows
+  
+  # --- Optional: Save to CSV ---
+  # Define filename
+  output_csv_file <- "hamburg_district_summary_measures.csv"
+  # Write the table to a CSV file in the working directory
+  # write.csv(summary_table, output_csv_file, row.names = FALSE, fileEncoding = "UTF-8")
+  # print(paste("Summary table saved to:", output_csv_file))
+  
+  # You can now copy the printed table or use the CSV file.
+  
+} else {
+  print("Error: The 'district_measures' object does not exist or is not a valid sf object with data.")
+  print("Please ensure you have run the previous script successfully.")
+}

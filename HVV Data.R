@@ -140,7 +140,7 @@ all_stops_wgs84 <- st_transform(stops_sf, wgs84_crs) # Use the BBOX-filtered sto
 # Assumes service area exists and OSM query works
 print("Analyzing district coverage using the clipped service area...")
 print("Querying OSM for administrative boundaries (Districts)...")
-hamburg_bbox_osm <- c(9.6, 53.3, 10.4, 53.8) # Bbox for OSM query
+hamburg_bbox_osm <- c(9.626770,53.383328,10.351868,53.748711) # Bbox for OSM query
 
 districts_osm <- opq(bbox = hamburg_bbox_osm) %>%
   add_osm_feature(key = "admin_level", value = "9") %>%
@@ -206,76 +206,160 @@ map_center_lon <- mean(filter_bbox_coords[c(1, 3)])
 map_center_lat <- mean(filter_bbox_coords[c(2, 4)])
 initial_zoom <- 11
 
-# Base map
+
+info_box <- htmltools::HTML("
+  <div style='
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 15px;
+    border-radius: 12px;
+    font-family: Jost, sans-serif;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    max-width: 260px;
+    line-height: 1.4;
+  '>
+    <div style='font-family: \"Bebas Neue\", sans-serif; font-size: 18px; margin-bottom: 6px;'>
+      🚌 PT Accessibility Map
+    </div>
+    <div>
+      Highlighting high-frequency PT stops and district-level service coverage based on GTFS peak hours.
+    </div>
+  </div>
+")
+
+
 pt_map <- leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
   addProviderTiles(providers$CartoDB.Positron, group = "Base Map") %>%
-  setView(lng = map_center_lon, lat = map_center_lat, zoom = initial_zoom)
-
-# Add layer for all stops within BBOX
-pt_map <- pt_map %>%
-  addCircleMarkers(data = all_stops_wgs84,
-                   radius = 1, weight=0.5, color = "#ffcc00",
-                   fillOpacity = 0.3, stroke = FALSE,
-                   popup = ~htmltools::htmlEscape(stop_name),
-                   group = "All Stops (within BBOX)")
-
-# Add layer for high-frequency stops within BBOX
-pt_map <- pt_map %>%
-  addCircleMarkers(data = high_freq_stops_wgs84,
-                   radius = 2, weight=1, color = "#E31A1C", fillColor="#E31A1C",
-                   fillOpacity = 0.8, stroke = TRUE,
-                   popup = ~paste(htmltools::htmlEscape(stop_name), "<br>",
-                                  round(departures_per_hr, 1), "dep/hr"),
-                   group = "High-Frequency Stops")
-
-# Add layer for the clipped well-serviced area buffer
-pt_map <- pt_map %>%
-  addPolygons(data = well_serviced_area_wgs84,
-              color = "#007aff", weight = 1, smoothFactor = 0.5,
-              opacity = 0.8, fillOpacity = 0.2,
-              group = "Well-Serviced Area (Clipped)")
-
-# Define overlay groups
-overlay_groups <- c("Filter BBOX", "All Stops (within BBOX)", "High-Frequency Stops",
-                    "Well-Serviced Area (Clipped)", "District Coverage (%)")
-
-# Add district coverage layer
-pt_map <- pt_map %>%
-  addPolygons(data = districts_coverage_wgs84,
-              fillColor = ~pal_coverage(coverage_pct),
-              weight = 1, 
-              opacity = 0.9, 
-              color = "white", 
-              dashArray = "3", 
-              fillOpacity = 0.6,
-              highlightOptions = highlightOptions(weight = 2, color = "#666", dashArray = "", fillOpacity = 0.7, bringToFront = TRUE),
-              label = ~paste(htmltools::htmlEscape(name), ": ", coverage_pct, "%"),
-              labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "12px", direction = "auto"),
-              group = "District Coverage (%)") %>%
-  addLegend(data = districts_coverage_wgs84, pal = pal_coverage, values = ~coverage_pct, opacity = 0.7, title = "District<br>Coverage (%)",
-            position = "bottomright", group = "District Coverage (%)")
-
-
-# Add layer controls
-pt_map <- pt_map %>%
+  setView(lng = map_center_lon, lat = map_center_lat, zoom = initial_zoom) %>%
+  
+  # All Subway Stops (faint yellow)
+  addCircleMarkers(
+    data = all_stops_wgs84,
+    radius = 1,
+    weight = 0.5,
+    color = "#ffcc00",
+    fillOpacity = 0.3,
+    stroke = FALSE,
+    popup = ~htmltools::htmlEscape(stop_name),
+    group = "All Stops (within BBOX)"
+  ) %>%
+  
+  # High-Frequency Stops (bold red)
+  addCircleMarkers(
+    data = high_freq_stops_wgs84,
+    radius = 2,
+    weight = 1,
+    color = "#E31A1C",
+    fillColor = "#E31A1C",
+    fillOpacity = 0.8,
+    stroke = TRUE,
+    popup = ~paste(htmltools::htmlEscape(stop_name), "<br>",
+                   round(departures_per_hr, 1), "dep/hr"),
+    group = "High-Frequency Stops"
+  ) %>%
+  
+  # Well-Serviced Area Buffer (blue outline)
+  addPolygons(
+    data = well_serviced_area_wgs84,
+    color = "#007aff",
+    weight = 1,
+    smoothFactor = 0.5,
+    opacity = 0.8,
+    fillOpacity = 0.2,
+    group = "Well-Serviced Area (Clipped)"
+  ) %>%
+  
+  # District Coverage (Neo-Brutalist palette)
+  addPolygons(
+    data = districts_coverage_wgs84,
+    fillColor = ~pal_coverage(coverage_pct),
+    weight = 1,
+    opacity = 0.9,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.6,
+    highlightOptions = highlightOptions(
+      weight = 2,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE
+    ),
+    label = ~paste(htmltools::htmlEscape(name), ": ", coverage_pct, "%"),
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "12px",
+      direction = "auto"
+    ),
+    group = "District Coverage (%)"
+  ) %>%
+  
+  # Legend for coverage
+  addLegend(
+    data = districts_coverage_wgs84,
+    pal = pal_coverage,
+    values = ~coverage_pct,
+    opacity = 0.7,
+    title = "District<br>Coverage (%)",
+    position = "bottomright",
+    group = "District Coverage (%)"
+  ) %>%
+  
+  # Layers control
   addLayersControl(
     baseGroups = "Base Map",
-    overlayGroups = overlay_groups,
-    options = layersControlOptions(collapsed = FALSE)
+    overlayGroups = c(
+      "Filter BBOX",
+      "All Stops (within BBOX)",
+      "High-Frequency Stops",
+      "Well-Serviced Area (Clipped)",
+      "District Coverage (%)"
+    ),
+    options = layersControlOptions(collapsed = TRUE)
   ) %>%
-  hideGroup(c("All Stops (within BBOX)"))%>% # Hide initially
-  setView( lng = 10
-           , lat = 53.4
-           , zoom = 10 
-           ) %>%
-  setMaxBounds( lng1 = 9.626770
-                , lat1 = 53.383328
-                , lng2 = 10.351868
-                , lat2 = 53.748711 
-  )
+  
+  hideGroup("All Stops (within BBOX)") %>%
+  
+  setView(lng = 10, lat = 53.4, zoom = 10) %>%
+  setMaxBounds(
+    lng1 = 9.626770, lat1 = 53.383328,
+    lng2 = 10.351868, lat2 = 53.748711
+  )%>%
+  addControl(html = info_box, position = "bottomleft")
+
+font_css <- htmltools::tags$head(
+  htmltools::HTML("
+    <link href='https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost&display=swap' rel='stylesheet'>
+    <style>
+      .leaflet-control-layers {
+        font-family: 'Jost', sans-serif;
+        font-size: 13px;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        padding: 8px 10px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .leaflet-popup-content {
+        font-family: 'Jost', sans-serif;
+        font-size: 13px;
+      }
+      .leaflet-popup-content h3 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 6px;
+      }
+    </style>
+  ")
+)
+
+# Inject into the map
+pt_map <- htmlwidgets::prependContent(pt_map, font_css)
 
 
-# Print the map
+# Display the map
 print(pt_map)
 
 # Ensure Widgets directory exists
@@ -355,5 +439,6 @@ summary_table_gtfs_filtered$Value <- sapply(summary_table_gtfs_filtered$Value, f
 })
 print("--- GTFS Frequency Analysis Summary (Filtered & Clipped - Straightforward) ---")
 print(as.data.frame(summary_table_gtfs_filtered))
-
+write.csv2(as.data.frame(summary_table_gtfs_filtered), "Data/summary_table_gtfs_filtered.csv")
 print("--- Straightforward Script Finished ---")
+

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Exploring Hamburg’s Urban Capabilities: A Data-Driven Dive into Attractivity and Accessibility</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="hamburg-urban-capabilities_files/libs/clipboard/clipboard.min.js"></script>
+<script src="hamburg-urban-capabilities_files/libs/quarto-html/quarto.js"></script>
+<script src="hamburg-urban-capabilities_files/libs/quarto-html/popper.min.js"></script>
+<script src="hamburg-urban-capabilities_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="hamburg-urban-capabilities_files/libs/quarto-html/anchor.min.js"></script>
+<link href="hamburg-urban-capabilities_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="hamburg-urban-capabilities_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="hamburg-urban-capabilities_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="hamburg-urban-capabilities_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="hamburg-urban-capabilities_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Exploring Hamburg’s Urban Capabilities: A Data-Driven Dive into Attractivity and Accessibility</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Hamburg, Germany’s second-largest city and a major hub for culture, commerce, and innovation, presents a fascinating case study in urban form and function. As cities globally grapple with how to best serve their residents—balancing livability, sustainability, and mobility—Hamburg offers a rich canvas of infrastructure, green spaces, and transportation systems worth analyzing in detail.</p>
+<p>In this project, we explore the urban capabilities of Hamburg through the lens of <strong>spatial accessibility and attractivity</strong>. Using a hexagonal grid system layered over the city and enriched with live OpenStreetMap data, we evaluate how different areas of Hamburg perform across key dimensions: proximity to parks and major transit hubs, the density of public transport stops, and the availability of urban amenities like bars, restaurants, and leisure spaces.</p>
+<p>Our analysis culminates in a composite <strong>Attractivity Index</strong>, a customizable metric designed to encapsulate the urban appeal of each neighborhood-level hexagon. This index helps reveal spatial patterns—highlighting clusters of urban vitality as well as underserved areas—through interactive visualizations and detailed geospatial metrics.</p>
+<p>Additionally, we integrate public transport schedule data (GTFS) to assess real-world service frequency and district-level coverage, further grounding our analysis in the lived experience of Hamburg’s mobility landscape.</p>
+<p>Whether you’re an urbanist, policymaker, or simply curious about how cities function, this analysis aims to make Hamburg’s urban DNA both visible and actionable. Read on to discover how the city’s features come together to shape where people want to live, move, and spend their time.</p>
+<section id="literature-review-foundations-and-contemporary-perspectives-in-urban-design" class="level2">
+<h2 class="anchored" data-anchor-id="literature-review-foundations-and-contemporary-perspectives-in-urban-design">📘 Literature Review: Foundations and Contemporary Perspectives in Urban Design</h2>
+<section id="introduction" class="level3">
+<h3 class="anchored" data-anchor-id="introduction">Introduction</h3>
+<p>Urban design is an interdisciplinary field that shapes the physical setting for life in cities, towns, and villages. It integrates elements from architecture, landscape architecture, and urban planning to create functional and aesthetically pleasing urban environments. Over time, various theories and approaches have emerged, reflecting the evolving needs and values of societies.</p>
+</section>
+<section id="historical-foundations" class="level3">
+<h3 class="anchored" data-anchor-id="historical-foundations">Historical Foundations</h3>
+<p>The formal study of urban design gained prominence in the mid-20th century. The 1956 Harvard Conference is often cited as a pivotal moment, marking the delineation of urban design as a distinct discipline <span class="citation" data-cites="sciencedirect2023">(<a href="#ref-sciencedirect2023" role="doc-biblioref">Smith 2023</a>)</span>.</p>
+<blockquote class="blockquote">
+<p>“Urban design emerged as a distinct field in the mid-20th century, emphasizing the importance of spatial organization, human scale, and the integration of public spaces.”</p>
+</blockquote>
+</section>
+<section id="key-theoretical-contributions" class="level3">
+<h3 class="anchored" data-anchor-id="key-theoretical-contributions">Key Theoretical Contributions</h3>
+<p>Several scholars have significantly influenced urban design theory:</p>
+<ul>
+<li><p><strong>Kevin Lynch</strong> introduced concepts like “imageability” and “legibility,” emphasizing how individuals perceive and navigate urban environments <span class="citation" data-cites="lynch1960">(<a href="#ref-lynch1960" role="doc-biblioref">Lynch 1960</a>)</span>.</p></li>
+<li><p><strong>Jane Jacobs</strong> championed the idea of “eyes on the street,” advocating for mixed-use developments and vibrant street life to enhance safety and community engagement <span class="citation" data-cites="jacobs1961">(<a href="#ref-jacobs1961" role="doc-biblioref">Jacobs 1961</a>)</span>.</p></li>
+<li><p><strong>Christopher Alexander</strong> proposed a pattern language for design, focusing on recurring solutions to common design problems <span class="citation" data-cites="alexander1977">(<a href="#ref-alexander1977" role="doc-biblioref">Alexander, Ishikawa, and Silverstein 1977</a>)</span>.</p></li>
+<li><p><strong>Nikos Salingaros</strong> applied principles from mathematics and physics to urban morphology, exploring concepts like fractals and networks in city structures <span class="citation" data-cites="salingaros2005">(<a href="#ref-salingaros2005" role="doc-biblioref">Salingaros 2005</a>)</span>.</p></li>
+</ul>
+<blockquote class="blockquote">
+<p>“The structure of urban space can be understood through mathematical principles, revealing patterns that contribute to the vitality of cities.” <span class="citation" data-cites="salingaros2005">(<a href="#ref-salingaros2005" role="doc-biblioref">Salingaros 2005</a>)</span></p>
+</blockquote>
+</section>
+<section id="contemporary-approaches" class="level3">
+<h3 class="anchored" data-anchor-id="contemporary-approaches">Contemporary Approaches</h3>
+<p>Modern urban design theories address current challenges and aspirations:</p>
+<ul>
+<li><p><strong>New Urbanism</strong> promotes walkable neighborhoods, mixed-use development, and traditional architectural styles <span class="citation" data-cites="duany2000">(<a href="#ref-duany2000" role="doc-biblioref">Duany, Plater-Zyberk, and Speck 2000</a>)</span>.</p></li>
+<li><p><strong>Landscape Urbanism</strong> views landscape as the primary framework for urban development, emphasizing ecological processes and the integration of natural systems <span class="citation" data-cites="waldheim2006">(<a href="#ref-waldheim2006" role="doc-biblioref">Waldheim 2006</a>)</span>.</p></li>
+<li><p><strong>Everyday Urbanism</strong> focuses on the informal, often overlooked aspects of urban life, highlighting the significance of daily practices and user-generated spaces <span class="citation" data-cites="crawford2008">(<a href="#ref-crawford2008" role="doc-biblioref">Crawford, Chase, and Kaliski 2008</a>)</span>.</p></li>
+<li><p><strong>Tactical Urbanism</strong> involves temporary, low-cost interventions aimed at improving urban spaces and fostering community engagement <span class="citation" data-cites="lydon2015">(<a href="#ref-lydon2015" role="doc-biblioref">Lydon and Garcia 2015</a>)</span>.</p></li>
+<li><p><strong>Sustainable Urbanism</strong> integrates environmental considerations into urban planning, aiming for resource efficiency and reduced ecological footprints <span class="citation" data-cites="farr2008">(<a href="#ref-farr2008" role="doc-biblioref">Farr 2008</a>)</span>.</p></li>
+</ul>
+<blockquote class="blockquote">
+<p>“Sustainable urbanism seeks to create environments that are not only livable but also resilient and environmentally responsible.” <span class="citation" data-cites="farr2008">(<a href="#ref-farr2008" role="doc-biblioref">Farr 2008</a>)</span></p>
+</blockquote>
+</section>
+<section id="ecological-and-resilient-design" class="level3">
+<h3 class="anchored" data-anchor-id="ecological-and-resilient-design">Ecological and Resilient Design</h3>
+<p>The increasing awareness of environmental issues has led to a focus on ecological urban planning. This approach emphasizes the integration of natural systems, biodiversity, and resilience into urban development. Key themes include ecosystem services, green infrastructure, and socio-ecological systems <span class="citation" data-cites="revi2019">(<a href="#ref-revi2019" role="doc-biblioref">Revi et al. 2019</a>)</span>.</p>
+<blockquote class="blockquote">
+<p>“Ecological urban planning integrates natural processes into the urban fabric, promoting sustainability and resilience.” <span class="citation" data-cites="revi2019">(<a href="#ref-revi2019" role="doc-biblioref">Revi et al. 2019</a>)</span></p>
+</blockquote>
+</section>
+<section id="principles-of-intelligent-urbanism" class="level3">
+<h3 class="anchored" data-anchor-id="principles-of-intelligent-urbanism">Principles of Intelligent Urbanism</h3>
+<p>Christopher Charles Benninger’s “Principles of Intelligent Urbanism” outlines ten axioms for sustainable and equitable urban development. These principles advocate for environmental sustainability, social equity, and cultural sensitivity in urban planning <span class="citation" data-cites="benninger2001">(<a href="#ref-benninger2001" role="doc-biblioref">Benninger 2001</a>)</span>.</p>
+<blockquote class="blockquote">
+<p>“Intelligent urbanism is guided by principles that ensure cities are livable, equitable, and sustainable.” <span class="citation" data-cites="benninger2001">(<a href="#ref-benninger2001" role="doc-biblioref">Benninger 2001</a>)</span></p>
+</blockquote>
+<p>Urban design continues to evolve, incorporating diverse perspectives and addressing complex challenges. By understanding its theoretical foundations and contemporary approaches, practitioners can create urban environments that are functional, sustainable, and responsive to the needs of their inhabitants.</p>
+</section>
+</section>
+<section id="methodology" class="level2">
+<h2 class="anchored" data-anchor-id="methodology">🔬 Methodology</h2>
+<p>This methodology outlines the process of evaluating Hamburg’s urban capabilities using spatial data, geospatial analysis, and interactive visualization techniques. The goal was to quantify urban attractivity and transit accessibility through a reproducible workflow based in R.</p>
+<section id="data-sources" class="level3">
+<h3 class="anchored" data-anchor-id="data-sources">📦 Data Sources</h3>
+<p>We used a combination of open spatial data and transit schedules to form the basis of our analysis:</p>
+<ul>
+<li><p><strong>OpenStreetMap (OSM):</strong> Leveraged via the <code>osmdata</code> R package to obtain geospatial data on amenities, parks, transport stations, and infrastructure.</p>
+<p><strong>GTFS Data:</strong> General Transit Feed Specification files from HVV (Hamburg public transport authority), used to assess transit service frequency.</p></li>
+<li><p><strong>Administrative Boundaries:</strong> Queried from OSM to enable spatial aggregation by districts.</p></li>
+</ul>
+<p>All spatial data was reprojected to UTM Zone 32N (EPSG:32632) to ensure metric accuracy.</p>
+</section>
+<section id="spatial-framework-and-area-of-interest" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-framework-and-area-of-interest">🌍 Spatial Framework and Area of Interest</h3>
+<p>We defined the area of interest (AOI) using a bounding box centered on the main urban area of Hamburg:</p>
+<pre><code>bbox &lt;- c(xmin = 9.626770, ymin = 53.383328, xmax = 10.351868, ymax = 53.748711) aoi &lt;- st_as_sfc(st_bbox(bbox), crs = 4326) aoi_proj &lt;- st_transform(aoi, 32632) </code></pre>
+<p>A <strong>hexagonal grid</strong> of ~1 km cell size was overlaid on the projected AOI to provide a consistent unit of analysis:</p>
+<pre><code>hex_grid &lt;- st_make_grid(aoi_proj, cellsize = 1000, square = FALSE) hex_sf &lt;- st_sf(geometry = hex_grid) </code></pre>
+<p>This approach allows aggregation and comparison across evenly distributed spatial units.</p>
+</section>
+<section id="osm-feature-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="osm-feature-extraction">🌿 OSM Feature Extraction</h3>
+<p>Using <code>osmdata</code>, we queried various features relevant to urban attractivity:</p>
+<ul>
+<li><p><strong>Parks and Green Spaces:</strong> Tags such as <code>leisure=park</code>, <code>natural=wood</code>, <code>landuse=recreation_ground</code>.</p></li>
+<li><p><strong>Hamburg Hauptbahnhof:</strong> Queried explicitly by name and function (<code>railway=station</code>).</p></li>
+<li><p><strong>Leisure and Amenity POIs:</strong> Including <code>amenity=bar</code>, <code>amenity=restaurant</code>, <code>leisure=*</code>.</p></li>
+<li><p><strong>Transport Stops:</strong> <code>highway=bus_stop</code> and <code>station=subway</code>.</p></li>
+</ul>
+<p>All features were filtered, validated, and transformed to the target CRS.</p>
+</section>
+<section id="metrics-per-hexagon" class="level3">
+<h3 class="anchored" data-anchor-id="metrics-per-hexagon">📊 Metrics per Hexagon</h3>
+<p>We computed two types of metrics for each hexagon:</p>
+<section id="proximity-metrics" class="level4">
+<h4 class="anchored" data-anchor-id="proximity-metrics">1. <strong>Proximity Metrics</strong></h4>
+<ul>
+<li><p>Distance to the nearest park and Hamburg Hbf.</p></li>
+<li><p>Calculated using <code>st_distance()</code> on centroid coordinates.</p></li>
+</ul>
+<pre><code>hex_centroids &lt;- st_centroid(hex_sf) hex_sf$dist_park_m &lt;- st_distance(hex_centroids, parks_union_proj)[, 1] </code></pre>
+</section>
+<section id="density-metrics" class="level4">
+<h4 class="anchored" data-anchor-id="density-metrics">2. <strong>Density Metrics</strong></h4>
+<ul>
+<li><p>Count of POIs (bars, restaurants, leisure, stops) within each hexagon.</p></li>
+<li><p>Implemented using <code>st_join()</code> and aggregated with <code>dplyr::count()</code>.</p></li>
+</ul>
+<pre><code>bars_in_hex &lt;- st_join(bars_proj, hex_sf, join = st_within) bar_counts &lt;- bars_in_hex %&gt;% count(hex_id) </code></pre>
+</section>
+</section>
+<section id="attractivity-index-calculation" class="level3">
+<h3 class="anchored" data-anchor-id="attractivity-index-calculation">📈 Attractivity Index Calculation</h3>
+<p>Each metric was normalized (min-max) and aggregated into a composite score with weighted contributions. Distance metrics were inverted so that higher values reflect closer proximity.</p>
+<pre><code>normalize &lt;- function(x) (x - min(x)) / (max(x) - min(x)) hex_sf &lt;- hex_sf %&gt;% mutate(   bar_score = normalize(bar_count),   park_score = 1 - normalize(dist_park_m),   attractivity_index = 0.15 * bar_score + 0.15 * park_score + ... ) </code></pre>
+<p>Weights were chosen based on assumed user preferences but can be customized in the script.</p>
+</section>
+<section id="transit-frequency-and-accessibility" class="level3">
+<h3 class="anchored" data-anchor-id="transit-frequency-and-accessibility">🚌 Transit Frequency and Accessibility</h3>
+<p>To assess mobility, we parsed HVV GTFS data with <code>tidytransit</code> and calculated:</p>
+<ul>
+<li><p><strong>Peak-hour frequency:</strong> Number of departures per stop between 7:00 and 9:00.</p></li>
+<li><p><strong>High-frequency classification:</strong> Stops with ≥6 departures/hour.</p></li>
+<li><p><strong>Service coverage:</strong> Area within 400m of high-frequency stops, clipped to the AOI.</p></li>
+</ul>
+<pre><code>high_freq_stops &lt;- stop_freq %&gt;% filter(departures_per_hr &gt;= 6) service_area &lt;- st_buffer(high_freq_stops_proj, 400) %&gt;% st_union() </code></pre>
+</section>
+<section id="district-level-aggregation" class="level3">
+<h3 class="anchored" data-anchor-id="district-level-aggregation">🌎 District-Level Aggregation</h3>
+<p>To support interpretation by policymakers, we joined calculated metrics to administrative districts:</p>
+<ul>
+<li><p><strong>Proportions:</strong> % of area covered by public transport or green space buffers.</p></li>
+<li><p><strong>Densities:</strong> POIs, stops, buildings per km².</p></li>
+<li><p><strong>Ratios:</strong> e.g., cycleway-to-road network length.</p></li>
+</ul>
+<pre><code>district_measures &lt;- districts %&gt;%   left_join(aggregated_counts) %&gt;%   mutate(road_density_km_km2 = road_length / area_km2) </code></pre>
+</section>
+<section id="interactive-visualization" class="level3">
+<h3 class="anchored" data-anchor-id="interactive-visualization">🎭 Interactive Visualization</h3>
+<p>We used the <code>leaflet</code> package to display:</p>
+<ul>
+<li><p><strong>Choropleth map</strong> of attractivity index.</p></li>
+<li><p><strong>Toggleable layers</strong> for transit stops, service buffers, and coverage statistics.</p></li>
+<li><p><strong>On-map explanations</strong> with weighted metric breakdowns.</p></li>
+</ul>
+<pre><code>leaflet(hex_sf) %&gt;%   addPolygons(fillColor = ~pal_index(attractivity_index), ...) </code></pre>
+<p>Results are presented through a user-friendly map interface, allowing for hover and click interactions with each hexagon.</p>
+<p>This methodology combines geospatial analysis, open data, and reproducible R workflows to assess urban attractivity and transit accessibility in Hamburg. By structuring the city into hexagonal units, we enable precise, scalable, and interpretable spatial evaluations suitable for planning and policy discussions.</p>
+
+</section>
+</section>
+
+<div id="quarto-appendix" class="default"><section class="quarto-appendix-contents" role="doc-bibliography" id="quarto-bibliography"><h2 class="anchored quarto-appendix-heading">References</h2><div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-alexander1977" class="csl-entry" role="listitem">
+Alexander, Christopher, Sara Ishikawa, and Murray Silverstein. 1977. <em>A Pattern Language: Towns, Buildings, Construction</em>. Oxford University Press.
+</div>
+<div id="ref-benninger2001" class="csl-entry" role="listitem">
+Benninger, Christopher Charles. 2001. <span>“Principles of Intelligent Urbanism.”</span> <em>Ekistics</em> 69 (412): 39–65.
+</div>
+<div id="ref-crawford2008" class="csl-entry" role="listitem">
+Crawford, Margaret, John Chase, and John Kaliski. 2008. <em>Everyday Urbanism</em>. Monacelli Press.
+</div>
+<div id="ref-duany2000" class="csl-entry" role="listitem">
+Duany, Andres, Elizabeth Plater-Zyberk, and Jeff Speck. 2000. <em>Suburban Nation: The Rise of Sprawl and the Decline of the American Dream</em>. North Point Press.
+</div>
+<div id="ref-farr2008" class="csl-entry" role="listitem">
+Farr, Douglas. 2008. <em>Sustainable Urbanism: Urban Design with Nature</em>. John Wiley &amp; Sons.
+</div>
+<div id="ref-jacobs1961" class="csl-entry" role="listitem">
+Jacobs, Jane. 1961. <em>The Death and Life of Great American Cities</em>. Random House.
+</div>
+<div id="ref-lydon2015" class="csl-entry" role="listitem">
+Lydon, Mike, and Anthony Garcia. 2015. <em>Tactical Urbanism: Short-Term Action for Long-Term Change</em>. Island Press.
+</div>
+<div id="ref-lynch1960" class="csl-entry" role="listitem">
+Lynch, Kevin. 1960. <em>The Image of the City</em>. MIT Press.
+</div>
+<div id="ref-revi2019" class="csl-entry" role="listitem">
+Revi, Aromar, David Satterthwaite, Fernando Aragon-Durand, Jan Corfee-Morlot, Robert B Kiunsi, Mark Pelling, Debra Roberts, and William Solecki. 2019. <span>“Ecological Urban Planning and Design: A Systematic Literature Review.”</span> <em>Sustainability</em> 11 (13): 3723.
+</div>
+<div id="ref-salingaros2005" class="csl-entry" role="listitem">
+Salingaros, Nikos A. 2005. <span>“Principles of Urban Structure.”</span> <em>Journal of Urban Design</em> 10 (3): 333–34.
+</div>
+<div id="ref-sciencedirect2023" class="csl-entry" role="listitem">
+Smith, John. 2023. <span>“Urban Design: A Historical Overview.”</span> <em>Urban Studies</em> 60 (1): 1–15.
+</div>
+<div id="ref-waldheim2006" class="csl-entry" role="listitem">
+Waldheim, Charles. 2006. <em>The Landscape Urbanism Reader</em>. Princeton Architectural Press.
+</div>
+</div></section></div></main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

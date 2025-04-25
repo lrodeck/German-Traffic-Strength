@@ -44,13 +44,9 @@ bbox_hamburg <- st_bbox(hamburg_boundary_sf) # Use bbox for queries
 # --- 4a. Parks----
 print("Querying OSM for parks...")
 park_tags <- c("park", "nature_reserve", "playground", "garden", "dog_park")
-landuse_tags <- c("forest", "grass", "greenfield", "recreation_ground", "meadow", "village_green")
-natural_tags <- c("wood", "scrub", "heath", "grassland")
 
 parks_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
   add_osm_feature(key = "leisure", value = park_tags) %>%
-  add_osm_feature(key = "landuse", value = landuse_tags) %>%
-  add_osm_feature(key = "natural", value = natural_tags) %>%
   osmdata_sf()
 
 # Combine polygons and multipolygons directly
@@ -133,6 +129,13 @@ bus_stops_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout =
   osmdata_sf()
 
 bus_stops_sf <- if (!is.null(bus_stops_osm$osm_points)) bus_stops_osm$osm_points %>% filter(!sf::st_is_empty(.)) else st_sf(geometry = st_sfc(crs=4326))
+bus_stops_sf <- bus_stops_sf %>%
+  arrange(name) %>%  # optional: prioritize by order
+  group_by(name) %>%
+  slice(1) %>%       # keep the first geometry per name
+  ungroup()
+
+
 # If querying platforms too: filter them, e.g., by checking associated route relations or tags like bus=yes
 bus_stops_proj <- st_transform(bus_stops_sf, target_crs)
 print(paste("Found", nrow(bus_stops_sf), "bus stops."))
@@ -156,6 +159,13 @@ subway_poly_centroids_sf <- if (nrow(subway_polygons_sf) > 0) st_centroid(subway
 # Simple approach: just bind rows. A more complex approach might dissolve by name.
 subway_stations_sf <- bind_rows(subway_points_sf, subway_poly_centroids_sf) %>% filter(!sf::st_is_empty(.))
 # Optional: Add further filtering, e.g., ensure railway=station or public_transport=station is also present if needed
+
+subway_stations_sf <- subway_stations_sf %>%
+  arrange(name) %>%  # optional: prioritize by order
+  group_by(name) %>%
+  slice(1) %>%       # keep the first geometry per name
+  ungroup()
+
 
 subway_stations_proj <- st_transform(subway_stations_sf, target_crs)
 print(paste("Found", nrow(subway_stations_sf), "potential subway station locations (points/centroids)."))
@@ -346,36 +356,67 @@ pal_index <- colorQuantile(
 # --- Create detailed popup content ---
 # Using htmltools::HTML to prevent potential cross-site scripting issues if names had HTML
 popup_content <- paste0(
-  "<div style='background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; font-size: 12px;'>", # Removed font-family for default
-  "<b>Hex ID:</b> ", htmltools::htmlEscape(hex_grid_viz$hex_id), "<br>",
-  "<b>Attractivity Index:</b> ", round(hex_grid_viz$attractivity_index, 3), "<hr>",
-  "Dist. to Park (m): ", ifelse(is.na(hex_grid_viz$dist_park_m), "N/A", round(hex_grid_viz$dist_park_m, 0)), "<br>",
-  "Dist. to Hbf (m): ", ifelse(is.na(hex_grid_viz$dist_hbf_m), "N/A", round(hex_grid_viz$dist_hbf_m, 0)), "<br>",
-  "Bars/Pubs: ", hex_grid_viz$bar_count, "<br>",
-  "Restaurants: ", hex_grid_viz$restaurant_count, "<br>",
-  "Other Leisure: ", hex_grid_viz$other_leisure_count, "<br>",
-  "Bus Stops: ", hex_grid_viz$bus_stop_count, "<br>", # New
-  "U-Bahn Stations: ", hex_grid_viz$subway_station_count, # New
+  "<div style='
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    font-family: Jost, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    max-width: 260px;
+  '>",
+  "<div style='
+    font-family: \"Bebas Neue\", sans-serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  '><b>Hex ID: ", htmltools::htmlEscape(hex_grid_viz$hex_id), "</b></div>",
+  "<div><b>Attractivity Index:</b> ", round(hex_grid_viz$attractivity_index, 3), "</div>",
+  "<hr style='margin: 8px 0;'>",
+  "📍 <b>Dist. to Park:</b> ", ifelse(is.na(hex_grid_viz$dist_park_m), "N/A", round(hex_grid_viz$dist_park_m, 0)), " m<br>",
+  "🚉 <b>Dist. to Hbf:</b> ", ifelse(is.na(hex_grid_viz$dist_hbf_m), "N/A", round(hex_grid_viz$dist_hbf_m, 0)), " m<br>",
+  "🍻 <b>Bars/Pubs:</b> ", hex_grid_viz$bar_count, "<br>",
+  "🍽️ <b>Restaurants:</b> ", hex_grid_viz$restaurant_count, "<br>",
+  "🎯 <b>Other Leisure:</b> ", hex_grid_viz$other_leisure_count, "<br>",
+  "🚌 <b>Bus Stops:</b> ", hex_grid_viz$bus_stop_count, "<br>",
+  "🚇 <b>U-Bahn Stations:</b> ", hex_grid_viz$subway_station_count,
   "</div>"
 )
 
+
 # --- Create HTML for the Explanation Box (Added PT stops) ---
 explanation_html <- paste0(
-  "<div style='background-color: rgba(255,255,255,0.8); padding: 10px; border-radius: 5px; font-size: 11px;'>", # Smaller font
-  "<b>Attractivity Index Explained</b><hr style='margin-top: 5px; margin-bottom: 5px;'>",
-  "<p>Index (0-1) based on weighted, normalized scores for:</p>",
-  "<ul>",
-  "<li>Proximity to Parks (Wt: ", weights$park_dist * 100, "%)</li>",
-  "<li>Proximity to Hbf (Wt: ", weights$hbf_dist * 100, "%)</li>",
-  "<li>Bars/Pubs (Wt: ", weights$bars * 100, "%)</li>",
-  "<li>Restaurants (Wt: ", weights$restaurants * 100, "%)</li>",
-  "<li>Other Leisure (Wt: ", weights$leisure * 100, "%)</li>",
-  "<li>Bus Stops (Wt: ", weights$bus_stops * 100, "%)</li>",         # New
-  "<li>U-Bahn Stations (Wt: ", weights$subway_stations * 100, "%)</li>", # New
+  "<div style='
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    font-family: Jost, sans-serif;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    max-width: 270px;
+  '>",
+  "<div style='
+    font-family: \"Bebas Neue\", sans-serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+  '><b>Attractivity Index Explained</b></div>",
+  "<hr style='margin: 8px 0;'>",
+  "<p style='margin: 0;'>Index (0–1) based on weighted, normalized metrics:</p>",
+  "<ul style='margin: 6px 0 8px 16px; padding-left: 0;'>",
+  "<li>Proximity to Parks (", weights$park_dist * 100, "%)</li>",
+  "<li>Proximity to Hbf (", weights$hbf_dist * 100, "%)</li>",
+  "<li>Bars/Pubs (", weights$bars * 100, "%)</li>",
+  "<li>Restaurants (", weights$restaurants * 100, "%)</li>",
+  "<li>Other Leisure (", weights$leisure * 100, "%)</li>",
+  "<li>Bus Stops (", weights$bus_stops * 100, "%)</li>",
+  "<li>U-Bahn Stations (", weights$subway_stations * 100, "%)</li>",
   "</ul>",
-  "<p><small>Higher index = more 'attractive'. Prox. score = 1 - norm. distance.</small></p>",
+  "<p style='font-size: 11px; margin-top: 6px; color: #444;'>Higher index = more attractive. Proximity scores are inverted: closer = higher.</p>",
   "</div>"
 )
+
 
 
 
@@ -426,5 +467,129 @@ viz_map_index <- leaflet(data = hex_grid_viz, options = leafletOptions(preferCan
 
 # Print the map
 print(viz_map_index)
+saveWidget(viz_map_index, file = "Widgets/viz_map_index.html", selfcontained = TRUE)
+
 
 print("--- Script finished ---")
+
+# --- Create Summary Table for Hex Grid Attractivity Analysis (Straightforward) ---
+# WARNING: This version has NO checks and WILL error if objects are missing or invalid!
+
+# Ensure necessary libraries are loaded
+library(dplyr)
+library(sf)
+library(units)
+library(tibble)
+
+# --- Configuration ---
+hex_rounding_digits <- 2 # For averages/medians/counts per hex
+index_rounding_digits <- 4 # For the final index values
+dist_rounding_digits <- 0 # For distances in meters
+
+# --- Data Extraction and Calculation (No Checks) ---
+# Create an empty list to hold summary metrics
+hex_summary_metrics <- list()
+
+print("Generating Hex Grid Attractivity analysis summary table (NO CHECKS)...")
+
+# 1. Analysis Context & Parameters (Assume variables exist)
+hex_summary_metrics[["Area of Interest"]] <- aoi_name
+hex_summary_metrics[["Target CRS"]] <- target_crs$input
+hex_summary_metrics[["Hexagon Cell Size (m)"]] <- hex_cellsize_m
+num_hexagons <- nrow(hex_grid_hamburg)
+hex_summary_metrics[["Number of Hexagons Analyzed"]] <- num_hexagons
+
+# 2. Input Feature Counts (Assume sf objects exist)
+hex_summary_metrics[["Input: Parks/Green Spaces Found (OSM Polygons)"]] <- nrow(parks_sf)
+hex_summary_metrics[["Input: Bars/Pubs Found (OSM Points)"]] <- nrow(bars_sf)
+hex_summary_metrics[["Input: Restaurants Found (OSM Points)"]] <- nrow(restaurants_sf)
+hex_summary_metrics[["Input: Other Leisure Locations Found (OSM Points/Centroids)"]] <- nrow(other_leisure_sf)
+hex_summary_metrics[["Input: Bus Stops Found (OSM Points)"]] <- nrow(bus_stops_sf)
+hex_summary_metrics[["Input: Subway Stations Found (OSM Points/Centroids)"]] <- nrow(subway_stations_sf)
+
+# 3. Index Composition (Weights) (Assume weights list exists)
+hex_summary_metrics[["--- Attractivity Index Weights ---"]] <- "" # Separator
+for (factor_name in names(weights)) {
+  metric_name <- paste("Weight:", factor_name)
+  hex_summary_metrics[[metric_name]] <- paste0(weights[[factor_name]] * 100, "%")
+}
+hex_summary_metrics[["--- End Weights ---"]] <- "" # Separator
+
+# 4. Summary Statistics for Hexagon Metrics & Index (Assume hex_grid_hamburg exists and has rows/columns)
+hex_data_summary <- st_drop_geometry(hex_grid_hamburg)
+
+hex_summary_metrics[["--- Hexagon Metric Summaries ---"]] <- "" # Separator
+
+# Summarize distances (Assume columns exist)
+dist_cols <- c("dist_park_m", "dist_hbf_m")
+dist_summary <- hex_data_summary %>%
+  summarise(
+    across(all_of(dist_cols), list(
+      Avg = ~ mean(.x, na.rm = TRUE),
+      Median = ~ median(.x, na.rm = TRUE),
+      Min = ~ min(.x, na.rm = TRUE),
+      Max = ~ max(.x, na.rm = TRUE)
+    ), .names = "{.col}_{.fn}")
+  )
+hex_summary_metrics[["Avg. Dist. to Park (m)"]] <- round(dist_summary$dist_park_m_Avg, dist_rounding_digits)
+hex_summary_metrics[["Median Dist. to Park (m)"]] <- round(dist_summary$dist_park_m_Median, dist_rounding_digits)
+hex_summary_metrics[["Min Dist. to Park (m)"]] <- round(dist_summary$dist_park_m_Min, dist_rounding_digits)
+hex_summary_metrics[["Max Dist. to Park (m)"]] <- round(dist_summary$dist_park_m_Max, dist_rounding_digits)
+hex_summary_metrics[["Avg. Dist. to Hbf (m)"]] <- round(dist_summary$dist_hbf_m_Avg, dist_rounding_digits)
+hex_summary_metrics[["Median Dist. to Hbf (m)"]] <- round(dist_summary$dist_hbf_m_Median, dist_rounding_digits)
+hex_summary_metrics[["Min Dist. to Hbf (m)"]] <- round(dist_summary$dist_hbf_m_Min, dist_rounding_digits)
+hex_summary_metrics[["Max Dist. to Hbf (m)"]] <- round(dist_summary$dist_hbf_m_Max, dist_rounding_digits)
+
+# Summarize counts (Assume columns exist)
+count_cols <- c("bar_count", "restaurant_count", "other_leisure_count", "bus_stop_count", "subway_station_count")
+count_summary <- hex_data_summary %>%
+  summarise(
+    across(all_of(count_cols), list(
+      Total = ~ sum(.x, na.rm = TRUE),
+      Avg_Hex = ~ mean(.x, na.rm = TRUE),
+      Median_Hex = ~ median(.x, na.rm = TRUE),
+      Max_Hex = ~ max(.x, na.rm = TRUE)
+    ), .names = "{.col}_{.fn}")
+  )
+# Add count summaries to list
+for (col in count_cols) {
+  col_nice_name <- tools::toTitleCase(gsub("_", " ", sub("_count", "", col)))
+  hex_summary_metrics[[paste("Total", col_nice_name, "(in hexes)")]] <- count_summary[[paste0(col, "_Total")]]
+  hex_summary_metrics[[paste("Avg.", col_nice_name, "per Hex")]] <- round(count_summary[[paste0(col, "_Avg_Hex")]], hex_rounding_digits)
+  hex_summary_metrics[[paste("Median", col_nice_name, "per Hex")]] <- round(count_summary[[paste0(col, "_Median_Hex")]], hex_rounding_digits)
+  hex_summary_metrics[[paste("Max", col_nice_name, "in one Hex")]] <- count_summary[[paste0(col, "_Max_Hex")]]
+}
+
+# Summarize Attractivity Index (Assume column exists)
+index_summary <- hex_data_summary %>%
+  filter(!is.na(attractivity_index)) %>% # Keep NA filter for summary stats
+  summarise(
+    Min_Index = min(attractivity_index),
+    Max_Index = max(attractivity_index),
+    Mean_Index = mean(attractivity_index),
+    Median_Index = median(attractivity_index)
+  )
+hex_summary_metrics[["--- Attractivity Index Summary ---"]] <- "" # Separator
+hex_summary_metrics[["Min Attractivity Index"]] <- round(index_summary$Min_Index, index_rounding_digits)
+hex_summary_metrics[["Max Attractivity Index"]] <- round(index_summary$Max_Index, index_rounding_digits)
+hex_summary_metrics[["Mean Attractivity Index"]] <- round(index_summary$Mean_Index, index_rounding_digits)
+hex_summary_metrics[["Median Attractivity Index"]] <- round(index_summary$Median_Index, index_rounding_digits)
+
+# --- Format and Print Table ---
+summary_table_hex <- tibble::enframe(hex_summary_metrics, name = "Metric", value = "Value")
+
+# Ensure all values are character for printing
+summary_table_hex$Value <- sapply(summary_table_hex$Value, function(x) {
+  if (inherits(x, "units")) { format(units::drop_units(x)) }
+  else { as.character(x) } # Convert everything else
+})
+
+print("--- Hex Grid Attractivity Analysis Summary (Straightforward - NO CHECKS) ---")
+options(width = 120)
+print(summary_table_hex, n = nrow(summary_table_hex))
+options(width = 80) # Reset width
+
+# --- Optional: Save to CSV ---
+output_csv_hex_summary <- "Data/hamburg_hex_attractivity_summary_straightforward.csv"
+write.csv(summary_table_hex, output_csv_hex_summary, row.names = FALSE, fileEncoding = "UTF-8")
+print(paste("Hex attractivity summary table saved to:", output_csv_hex_summary))
