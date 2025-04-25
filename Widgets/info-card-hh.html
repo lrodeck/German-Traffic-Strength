@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburg Infographic - Neo-Brutalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            /* Set background to transparent */
+            background-color: transparent;
+            color: #111827; /* Darker text for contrast */
+        }
+
+        /* Use Bebas Neue for titles */
+        h1, h2, .header-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em; /* Add slight letter spacing for Bebas Neue */
+        }
+
+        /* Neo-Brutalist Card Style */
+        .infographic-card {
+            background-color: white;
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #111827; /* Hard shadow effect */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+        }
+
+        /* Hover effect for cards */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #005c99; /* Shifted shadow with accent color */
+        }
+
+        /* Icon style - use black for stark contrast */
+        .icon-style {
+            color: #111827;
+        }
+
+        /* Header styling */
+        .header-title {
+            font-weight: 400; /* Bebas Neue is inherently bold */
+            color: #111827;
+        }
+        .header-subtitle {
+            color: #4b5563; /* Slightly lighter gray */
+            font-family: 'Jost', sans-serif; /* Ensure subtitle uses Jost */
+        }
+
+        /* Specific card background colors - use bolder, solid colors */
+        .card-bg-blue {
+             background-color: #a7d8ff; /* Brighter blue */
+             border-color: #005c99; /* Darker blue border */
+             box-shadow: 4px 4px 0px #005c99;
+        }
+        .card-bg-green {
+             background-color: #a7f3d0; /* Brighter green */
+             border-color: #047857; /* Darker green border */
+             box-shadow: 4px 4px 0px #047857;
+        }
+        .card-bg-blue:hover {
+            box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+        .card-bg-green:hover {
+             box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+
+        /* Bold text for key numbers (using Jost Bold) */
+        .key-number {
+            font-weight: 700; /* Use Jost Bold */
+            color: #111827; /* Black for high contrast */
+            font-family: 'Jost', sans-serif; /* Ensure key numbers use Jost */
+        }
+
+        /* Ensure links/buttons (if any) have a similar style */
+        .neo-button {
+            display: inline-block;
+            background-color: #eab308; /* Example: Yellow */
+            color: #111827;
+            border: 2px solid #111827;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            font-weight: 600; /* Use Jost SemiBold/Bold */
+            box-shadow: 2px 2px 0px #111827;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Jost', sans-serif; /* Ensure buttons use Jost */
+        }
+        .neo-button:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #111827;
+        }
+
+        /* Explicitly set font for list items and paragraphs if needed */
+        ul, p, li div {
+             font-family: 'Jost', sans-serif;
+        }
+        /* Adjust font weight for specific elements if needed */
+         h3 {
+            font-weight: 700; /* Jost Bold for sub-landmarks */
+            font-family: 'Jost', sans-serif;
+         }
+         strong {
+             font-weight: 700; /* Jost Bold */
+         }
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="text-center mb-10 sm:mb-16">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl header-title mb-2">
+                <i class="fas fa-anchor icon-style mr-2"></i>Discover Hamburg
+            </h1>
+            <p class="text-lg sm:text-xl header-subtitle">The Gateway to the World</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+
+            <div class="infographic-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-city icon-style mr-3 text-2xl"></i>Key Facts
+                </h2>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start"><i class="fas fa-users w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Population:</strong> ~1.9 million</div></li>
+                    <li class="flex items-start"><i class="fas fa-map-marked-alt w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Area:</strong> 755 km² (292 sq mi)</div></li>
+                    <li class="flex items-start"><i class="fas fa-water w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>State:</strong> City-state (Stadtstaat)</div></li>
+                     <li class="flex items-start"><i class="fas fa-globe-europe w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Country:</strong> Germany</div></li>
+                </ul>
+            </div>
+
+            <div class="infographic-card card-bg-blue">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-bridge icon-style mr-3 text-2xl"></i>City of Bridges
+                </h2>
+                <div class="text-center">
+                     <div class="text-6xl key-number mb-2">~2,500</div>
+                     <p class="text-gray-700">More bridges than Amsterdam, Venice, and London combined!</p>
+                </div>
+            </div>
+
+            <div class="infographic-card card-bg-green">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-leaf icon-style mr-3 text-2xl"></i>Green Metropolis
+                </h2>
+                <div class="text-center">
+                    <div class="text-6xl key-number mb-2">~14%</div>
+                    <p class="text-gray-700">Of the city area consists of green spaces and recreational areas.</p>
+                </div>
+            </div>
+
+            <div class="infographic-card md:col-span-2 lg:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-ship icon-style mr-3 text-2xl"></i>Port of Hamburg
+                </h2>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start"><i class="fas fa-anchor w-5 text-center mr-2 mt-1 icon-style"></i><div>Germany's largest seaport.</div></li>
+                    <li class="flex items-start"><i class="fas fa-trophy w-5 text-center mr-2 mt-1 icon-style"></i><div>3rd busiest port in Europe.</div></li>
+                    <li class="flex items-start"><i class="fas fa-landmark w-5 text-center mr-2 mt-1 icon-style"></i><div>A major tourist attraction with boat tours.</div></li>
+                </ul>
+            </div>
+
+            <div class="infographic-card lg:col-span-2">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-landmark icon-style mr-3 text-2xl"></i>Must-See Landmarks
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Elbphilharmonie</h3>
+                        <p>Stunning concert hall with panoramic views.</p>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Speicherstadt</h3>
+                        <p>Largest warehouse district built on oak piles (UNESCO World Heritage).</p>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Miniatur Wunderland</h3>
+                        <p>World's largest model railway exhibition.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">St. Michael's Church</h3>
+                        <p>Iconic baroque church ("Michel") with a famous tower.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">Reeperbahn</h3>
+                        <p>Famous entertainment and nightlife district in St. Pauli.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">Planten un Blomen</h3>
+                        <p>Large urban park with botanical gardens and water light concerts.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="text-center mt-10 sm:mt-16 text-gray-600 text-sm">
+            Infographic created with HTML & Tailwind CSS - Neo-Brutalist Style
+        </footer>
+
+    </div>
+
+</body>

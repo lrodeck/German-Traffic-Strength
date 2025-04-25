@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburg Walkability Isochrones - Neo-Brutalist Looping Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            background-color: transparent; /* Transparent background */
+            color: #111827; /* Darker text for contrast */
+            overflow-x: hidden; /* Prevent horizontal scroll on body */
+        }
+
+        /* Use Bebas Neue for titles */
+        h1, h2, .header-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em;
+        }
+
+        /* Gallery Wrapper for buttons */
+        .gallery-wrapper {
+            position: relative; /* Needed for absolute positioning of buttons */
+            padding: 0 2.5rem; /* Add space for buttons */
+            max-width: 100%;
+            overflow: hidden; /* Hide parts outside the main view */
+        }
+
+        /* Gallery Container Style */
+        .gallery-container {
+            display: flex;
+            overflow-x: auto; /* Enable horizontal scrolling */
+            /* scroll-snap-type: x mandatory; */ /* Disable snap for smoother loop */
+            gap: 1.5rem; /* Space between cards */
+            padding-left: 1.5rem; /* Ensure first card isn't cut off */
+            padding-right: 1.5rem; /* Ensure last card isn't cut off */
+            padding-bottom: 1rem; /* Space for scrollbar if visible */
+            margin-bottom: -1rem; /* Counteract padding for layout */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scroll-behavior: smooth; /* Enable smooth scrolling via JS/CSS */
+        }
+
+        /* Hide scrollbar visually but keep functionality */
+        .gallery-container::-webkit-scrollbar {
+             display: none; /* Chrome, Safari, Opera */
+        }
+        .gallery-container {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+
+        /* Neo-Brutalist Card Style for Gallery Items */
+        .infographic-card {
+            background-color: white; /* Base color */
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #111827; /* Hard shadow effect */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+            flex: 0 0 auto; /* Prevent shrinking */
+            width: 85%; /* Adjust card width slightly for button space */
+            max-width: 330px; /* Adjust max width */
+            /* scroll-snap-align: start; */ /* Disable snap */
+            display: flex;
+            flex-direction: column;
+            height: auto; /* Allow height to adjust to content */
+            min-height: 300px; /* Ensure a minimum height */
+        }
+
+        /* Hardcoded Gradient Colors (Example: Green -> Teal -> Blue -> Purple -> Pink -> Red -> Orange -> Yellow -> Green) */
+        /* Using HSL for easier gradient generation */
+        /* Base Hue: 120 (Green) */
+        .infographic-card:nth-child(1), .infographic-card:nth-child(15) { background-color: hsl(120, 60%, 85%); border-color: hsl(120, 40%, 40%); box-shadow: 4px 4px 0px hsl(120, 40%, 40%); }
+        .infographic-card:nth-child(2), .infographic-card:nth-child(16) { background-color: hsl(145, 60%, 85%); border-color: hsl(145, 40%, 40%); box-shadow: 4px 4px 0px hsl(145, 40%, 40%); }
+        .infographic-card:nth-child(3), .infographic-card:nth-child(17) { background-color: hsl(170, 60%, 85%); border-color: hsl(170, 40%, 40%); box-shadow: 4px 4px 0px hsl(170, 40%, 40%); }
+        .infographic-card:nth-child(4), .infographic-card:nth-child(18) { background-color: hsl(195, 60%, 85%); border-color: hsl(195, 40%, 40%); box-shadow: 4px 4px 0px hsl(195, 40%, 40%); }
+        .infographic-card:nth-child(5), .infographic-card:nth-child(19) { background-color: hsl(220, 60%, 85%); border-color: hsl(220, 40%, 40%); box-shadow: 4px 4px 0px hsl(220, 40%, 40%); }
+        .infographic-card:nth-child(6), .infographic-card:nth-child(20) { background-color: hsl(245, 60%, 85%); border-color: hsl(245, 40%, 40%); box-shadow: 4px 4px 0px hsl(245, 40%, 40%); }
+        .infographic-card:nth-child(7), .infographic-card:nth-child(21) { background-color: hsl(270, 60%, 85%); border-color: hsl(270, 40%, 40%); box-shadow: 4px 4px 0px hsl(270, 40%, 40%); }
+        .infographic-card:nth-child(8), .infographic-card:nth-child(22) { background-color: hsl(295, 60%, 85%); border-color: hsl(295, 40%, 40%); box-shadow: 4px 4px 0px hsl(295, 40%, 40%); }
+        .infographic-card:nth-child(9), .infographic-card:nth-child(23) { background-color: hsl(320, 60%, 85%); border-color: hsl(320, 40%, 40%); box-shadow: 4px 4px 0px hsl(320, 40%, 40%); }
+        .infographic-card:nth-child(10), .infographic-card:nth-child(24){ background-color: hsl(345, 60%, 85%); border-color: hsl(345, 40%, 40%); box-shadow: 4px 4px 0px hsl(345, 40%, 40%); }
+        .infographic-card:nth-child(11), .infographic-card:nth-child(25){ background-color: hsl(10, 60%, 85%); border-color: hsl(10, 40%, 40%); box-shadow: 4px 4px 0px hsl(10, 40%, 40%); }
+        .infographic-card:nth-child(12), .infographic-card:nth-child(26){ background-color: hsl(35, 60%, 85%); border-color: hsl(35, 40%, 40%); box-shadow: 4px 4px 0px hsl(35, 40%, 40%); }
+        .infographic-card:nth-child(13), .infographic-card:nth-child(27){ background-color: hsl(60, 60%, 85%); border-color: hsl(60, 40%, 40%); box-shadow: 4px 4px 0px hsl(60, 40%, 40%); }
+        .infographic-card:nth-child(14), .infographic-card:nth-child(28){ background-color: hsl(95, 60%, 85%); border-color: hsl(95, 40%, 40%); box-shadow: 4px 4px 0px hsl(95, 40%, 40%); }
+
+
+         .infographic-card .card-content {
+             flex-grow: 1;
+         }
+
+        /* Hover effect for cards */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #111827 !important; /* Black shadow on hover, override specific colors */
+        }
+
+        /* Icon style - use black for stark contrast */
+        .icon-style {
+            color: #111827;
+            width: 1.25rem; /* w-5 */
+            text-align: center;
+            margin-right: 0.5rem; /* mr-2 */
+            flex-shrink: 0;
+        }
+         .icon-large {
+             font-size: 1.5rem;
+             margin-right: 0.75rem; /* mr-3 */
+         }
+         .icon-medium {
+             font-size: 1.25rem;
+             margin-right: 0.5rem;
+         }
+
+
+        /* Header styling */
+        .header-title {
+            font-weight: 400; /* Bebas Neue is inherently bold */
+            color: #111827;
+        }
+        .header-subtitle {
+            color: #4b5563; /* Slightly lighter gray */
+            font-family: 'Jost', sans-serif;
+        }
+
+        /* Text styling for metrics */
+        .key-number {
+            font-weight: 700;
+            color: #111827;
+            font-family: 'Jost', sans-serif;
+            display: block;
+            margin-bottom: 0.1rem;
+            font-size: 1.3rem; /* Adjusted size for card layout */
+            line-height: 1.2;
+        }
+        .metric-label {
+             font-size: 0.8em; /* Smaller label */
+             color: #4b5563;
+             line-height: 1.1;
+        }
+         .metric-unit {
+             font-size: 0.75em; /* Smaller unit */
+             color: #4b5563;
+             margin-left: 0.1em;
+         }
+
+        /* List styling for walk times */
+         ul.walk-list {
+             list-style: none;
+             padding-left: 0;
+             margin-top: 0.5rem;
+         }
+         ul.walk-list li {
+             margin-bottom: 1.25rem; /* Space between time intervals */
+             display: flex;
+             align-items: flex-start; /* Align icon with top of text */
+             min-height: 40px; /* Ensure consistent height */
+         }
+         /* Ensure icons in lists have consistent width */
+         ul.walk-list li .icon-style {
+             width: 1.5rem; /* Consistent width for list icons */
+             text-align: center;
+             margin-right: 0.75rem; /* mr-3 */
+             margin-top: 0.1rem; /* Align icon better */
+         }
+         .time-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1f2937; /* gray-800 */
+            margin-bottom: 0.25rem;
+         }
+         .distance-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+         }
+         .hub-title { /* Title within the card */
+             font-size: 1.5rem; /* h2 equivalent */
+             margin-bottom: 1rem;
+             display: flex;
+             align-items: center;
+             color: #1f2937; /* gray-800 */
+         }
+
+         /* Scroll Button Styling */
+         .scroll-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            background-color: #fde047; /* Yellow bg */
+            color: #111827; /* Black text */
+            border: 2px solid #111827;
+            width: 2.5rem; /* Fixed width */
+            height: 2.5rem; /* Fixed height */
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 2px 2px 0px #111827;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+         }
+         .scroll-button:hover {
+            background-color: #facc15; /* Darker yellow */
+            transform: translate(-1px, -51%); /* Slight move effect + maintain vertical center */
+            box-shadow: 3px 3px 0px #111827;
+         }
+         .scroll-button.left {
+            left: 0rem; /* Position left */
+         }
+         .scroll-button.right {
+            right: 0rem; /* Position right */
+         }
+          .scroll-button:disabled { /* Should not be needed with looping */
+             opacity: 0.5;
+             cursor: not-allowed;
+             background-color: #e5e7eb;
+             box-shadow: 2px 2px 0px #6b7280;
+             border-color: #6b7280;
+         }
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-full mx-auto"> <header class="text-center mb-10 sm:mb-16 max-w-6xl mx-auto"> <h1 class="text-3xl sm:text-4xl md:text-5xl header-title mb-2">
+                <i class="fas fa-person-walking icon-style icon-large"></i>Hamburg Walkability Isochrones
+            </h1>
+            <p class="text-lg sm:text-xl header-subtitle">Walking Distances from Key Hubs</p>
+        </header>
+
+        <div class="gallery-wrapper">
+            <button id="scroll-left" class="scroll-button left" aria-label="Scroll Left">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div id="gallery-container" class="gallery-container">
+                </div> <button id="scroll-right" class="scroll-button right" aria-label="Scroll Right">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div> <footer class="text-center mt-10 sm:mt-16 text-gray-600 text-sm max-w-6xl mx-auto"> Infographic based on walk isochrone osrm open source calculation. Distances rounded to nearest meter. Scroll horizontally or use buttons to view all hubs.
+        </footer>
+
+    </div>
+
+    <script>
+        const hubData = [
+            { name: "Hamburg Hauptbahnhof", icon: "fa-train", data: [{ time: 5, avg: 186, max: 348 }, { time: 10, avg: 460, max: 651 }, { time: 15, avg: 697, max: 954 }] },
+            { name: "Jungfernstieg", icon: "fa-water", data: [{ time: 5, avg: 185, max: 308 }, { time: 10, avg: 455, max: 628 }, { time: 15, avg: 716, max: 958 }] },
+            { name: "Universität Hamburg", icon: "fa-university", data: [{ time: 5, avg: 170, max: 332 }, { time: 10, avg: 428, max: 711 }, { time: 15, avg: 678, max: 1037 }] },
+            { name: "Sternschanze", icon: "fa-star", data: [{ time: 5, avg: 204, max: 348 }, { time: 10, avg: 468, max: 694 }, { time: 15, avg: 751, max: 1096 }] },
+            { name: "Bahnhof Altona", icon: "fa-train-subway", data: [{ time: 5, avg: 187, max: 333 }, { time: 10, avg: 452, max: 652 }, { time: 15, avg: 744, max: 1014 }] },
+            { name: "Hamburg Harburg", icon: "fa-industry", data: [{ time: 5, avg: 184, max: 339 }, { time: 10, avg: 442, max: 716 }, { time: 15, avg: 754, max: 1075 }] },
+            { name: "Hafencity", icon: "fa-anchor", data: [{ time: 5, avg: 191, max: 309 }, { time: 10, avg: 448, max: 716 }, { time: 15, avg: 723, max: 1070 }] },
+            { name: "Wilhelmsburg", icon: "fa-water", data: [{ time: 5, avg: 204, max: 477 }, { time: 10, avg: 459, max: 998 }, { time: 15, avg: 714, max: 1304 }] },
+            { name: "Eppendorf", icon: "fa-house-user", data: [{ time: 5, avg: 203, max: 315 }, { time: 10, avg: 458, max: 714 }, { time: 15, avg: 751, max: 1021 }] },
+            { name: "Winterhude", icon: "fa-tree", data: [{ time: 5, avg: 203, max: 339 }, { time: 10, avg: 433, max: 638 }, { time: 15, avg: 712, max: 1066 }] },
+            { name: "Wandsbek Markt", icon: "fa-store", data: [{ time: 5, avg: 180, max: 291 }, { time: 10, avg: 421, max: 691 }, { time: 15, avg: 686, max: 1015 }] },
+            { name: "Barmbek", icon: "fa-building", data: [{ time: 5, avg: 177, max: 323 }, { time: 10, avg: 397, max: 608 }, { time: 15, avg: 685, max: 998 }] },
+            { name: "Bergedorf", icon: "fa-landmark", data: [{ time: 5, avg: 178, max: 322 }, { time: 10, avg: 419, max: 709 }, { time: 15, avg: 804, max: 1383 }] },
+            { name: "Eimsbüttel", icon: "fa-users", data: [{ time: 5, avg: 180, max: 314 }, { time: 10, avg: 425, max: 630 }, { time: 15, avg: 730, max: 1002 }] }
+        ];
+
+        const galleryContainer = document.getElementById('gallery-container');
+        const scrollLeftButton = document.getElementById('scroll-left');
+        const scrollRightButton = document.getElementById('scroll-right');
+        const numVisibleCards = 3; // Number of cards to clone for smooth looping (adjust as needed)
+        let cardWidth = 0; // Will be calculated
+        let isScrolling = false; // Flag to prevent rapid clicks during scroll reset
+
+        // Function to create a single card element
+        function createCardElement(hub) {
+            const card = document.createElement('div');
+            card.className = 'infographic-card';
+            card.dataset.hub = hub.name; // Add data attribute for identification if needed
+
+            let contentHTML = `
+                <h2 class="hub-title">
+                    <i class="fas ${hub.icon} icon-style icon-medium"></i>${hub.name}
+                </h2>
+                <div class="card-content">
+                    <ul class="walk-list">`;
+
+            hub.data.forEach(item => {
+                contentHTML += `
+                        <li>
+                            <i class="fas fa-clock icon-style"></i>
+                            <div>
+                                <div class="time-label">${item.time} Minutes</div>
+                                <div class="distance-grid">
+                                    <div><span class="key-number">${item.avg}<span class="metric-unit">m</span></span><span class="metric-label">Avg</span></div>
+                                    <div><span class="key-number">${item.max}<span class="metric-unit">m</span></span><span class="metric-label">Max</span></div>
+                                </div>
+                            </div>
+                        </li>`;
+            });
+
+            contentHTML += `</ul></div>`;
+            card.innerHTML = contentHTML;
+            return card;
+        }
+
+        // Function to setup the gallery with cloned cards for looping
+        function setupGallery() {
+            galleryContainer.innerHTML = ''; // Clear previous content
+
+            // Add original cards
+            hubData.forEach(hub => {
+                galleryContainer.appendChild(createCardElement(hub));
+            });
+
+            // Clone first few cards and append to the end
+            for (let i = 0; i < numVisibleCards; i++) {
+                const hub = hubData[i % hubData.length]; // Wrap around if numVisibleCards > hubData.length
+                const clone = createCardElement(hub);
+                clone.classList.add('clone');
+                galleryContainer.appendChild(clone);
+            }
+
+            // Clone last few cards and prepend to the beginning
+            for (let i = 0; i < numVisibleCards; i++) {
+                 const hub = hubData[(hubData.length - 1 - i) % hubData.length]; // Get last items
+                 const clone = createCardElement(hub);
+                 clone.classList.add('clone');
+                 galleryContainer.insertBefore(clone, galleryContainer.firstChild);
+            }
+
+            // Calculate card width including gap after rendering
+            const firstCard = galleryContainer.querySelector('.infographic-card:not(.clone)');
+            if (firstCard) {
+                const cardStyle = window.getComputedStyle(firstCard);
+                const gap = parseFloat(window.getComputedStyle(galleryContainer).gap) || 24; // 1.5rem default
+                cardWidth = firstCard.offsetWidth + gap;
+
+                 // Set initial scroll position to show the first *original* card
+                 // Scroll past the prepended clones
+                 galleryContainer.scrollLeft = cardWidth * numVisibleCards;
+            }
+        }
+
+
+        // Scroll function
+        function scrollGallery(direction) {
+            if (isScrolling) return; // Prevent clicks during scroll reset
+
+            const scrollAmount = cardWidth; // Scroll by one card width
+            galleryContainer.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+
+        // Check scroll position and handle loop reset
+        galleryContainer.addEventListener('scroll', () => {
+            if (isScrolling) return; // Don't run check if we are already resetting
+
+            const totalWidthOfOriginals = cardWidth * hubData.length;
+            const currentScroll = galleryContainer.scrollLeft;
+
+            // Check if scrolled past the last original card (into the end clones)
+            if (currentScroll >= totalWidthOfOriginals + (cardWidth * numVisibleCards) - cardWidth/2 ) { // Added buffer
+                isScrolling = true;
+                galleryContainer.style.scrollBehavior = 'auto'; // Disable smooth scroll for reset
+                galleryContainer.scrollLeft = cardWidth * numVisibleCards; // Jump back to first original
+                setTimeout(() => {
+                    galleryContainer.style.scrollBehavior = 'smooth'; // Re-enable smooth scroll
+                    isScrolling = false;
+                }, 50); // Short delay
+            }
+            // Check if scrolled before the first original card (into the start clones)
+            else if (currentScroll <= cardWidth * (numVisibleCards -1) + cardWidth/2) { // Added buffer
+                isScrolling = true;
+                galleryContainer.style.scrollBehavior = 'auto'; // Disable smooth scroll for reset
+                galleryContainer.scrollLeft = totalWidthOfOriginals + (cardWidth * (numVisibleCards -1)); // Jump to last original
+                 setTimeout(() => {
+                    galleryContainer.style.scrollBehavior = 'smooth'; // Re-enable smooth scroll
+                    isScrolling = false;
+                }, 50); // Short delay
+            }
+        });
+
+
+        // Event listeners for buttons
+        scrollLeftButton.addEventListener('click', () => scrollGallery(-1));
+        scrollRightButton.addEventListener('click', () => scrollGallery(1));
+
+        // Initial setup
+        setupGallery();
+
+        // Recalculate on resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+             clearTimeout(resizeTimeout);
+             resizeTimeout = setTimeout(() => {
+                 // Need to reset scroll position before setup
+                 const currentScrollRatio = galleryContainer.scrollLeft / galleryContainer.scrollWidth;
+                 setupGallery(); // This recalculates cardWidth
+                 // Attempt to restore scroll position proportionally
+                 galleryContainer.scrollLeft = galleryContainer.scrollWidth * currentScrollRatio;
+             }, 250);
+        });
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburg Attractivity Analysis - Neo-Brutalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            background-color: transparent; /* Transparent background */
+            color: #111827; /* Darker text for contrast */
+        }
+
+        /* Use Bebas Neue for titles */
+        h1, h2, .header-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em;
+        }
+
+        /* Neo-Brutalist Card Style */
+        .infographic-card {
+            background-color: white;
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #111827; /* Hard shadow effect */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+            height: 100%; /* Make cards in a row equal height */
+            display: flex;
+            flex-direction: column;
+        }
+         .infographic-card .card-content {
+             flex-grow: 1;
+         }
+
+        /* Hover effect for cards */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #D97706; /* Shifted shadow with accent color (amber) */
+        }
+
+        /* Icon style - use black for stark contrast */
+        .icon-style {
+            color: #111827;
+            width: 1.25rem; /* w-5 */
+            text-align: center;
+            margin-right: 0.5rem; /* mr-2 */
+            flex-shrink: 0;
+        }
+         .icon-large {
+             font-size: 1.5rem;
+             margin-right: 0.75rem; /* mr-3 */
+         }
+         .icon-medium {
+             font-size: 1.25rem; /* Icon size for index card */
+             margin-right: 0.5rem; /* Space between icon and text */
+         }
+
+
+        /* Header styling */
+        .header-title {
+            font-weight: 400; /* Bebas Neue is inherently bold */
+            color: #111827;
+        }
+        .header-subtitle {
+            color: #4b5563; /* Slightly lighter gray */
+            font-family: 'Jost', sans-serif;
+        }
+
+        /* Specific card background colors */
+        .card-bg-amber-light {
+             background-color: #fef3c7; /* amber-100 */
+             border-color: #d97706; /* amber-600 */
+             box-shadow: 4px 4px 0px #d97706;
+        }
+         .card-bg-amber-mid {
+             background-color: #fcd34d; /* amber-300 */
+             border-color: #b45309; /* amber-700 */
+             box-shadow: 4px 4px 0px #b45309;
+         }
+        .card-bg-orange-light {
+             background-color: #ffedd5; /* orange-100 */
+             border-color: #ea580c; /* orange-600 */
+             box-shadow: 4px 4px 0px #ea580c;
+        }
+        .card-bg-orange-mid {
+             background-color: #fdba74; /* orange-300 */
+             border-color: #c2410c; /* orange-700 */
+             box-shadow: 4px 4px 0px #c2410c;
+        }
+
+
+        .card-bg-amber-light:hover,
+        .card-bg-amber-mid:hover,
+        .card-bg-orange-light:hover,
+        .card-bg-orange-mid:hover {
+            box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+
+
+        /* Text styling for metrics */
+        .key-number {
+            font-weight: 700;
+            color: #111827;
+            font-family: 'Jost', sans-serif;
+            display: block; /* Make number appear on its own line */
+            margin-bottom: 0.1rem; /* Space below number */
+            font-size: 1.5rem; /* Adjust size */
+            line-height: 1.2;
+        }
+        .metric-label {
+             font-size: 0.85em;
+             color: #4b5563;
+             line-height: 1.1;
+        }
+         .metric-unit {
+             font-size: 0.8em;
+             color: #4b5563;
+             margin-left: 0.1em;
+         }
+
+        /* List styling */
+         ul.metric-list {
+             list-style: none;
+             padding-left: 0;
+             margin-top: 0.5rem;
+         }
+         ul.metric-list li {
+             margin-bottom: 1rem;
+             display: flex;
+             align-items: center; /* Vertically align icon and text */
+             min-height: 40px; /* Ensure consistent height */
+         }
+         /* Ensure icons in lists have consistent width */
+         ul.metric-list li .icon-style {
+             width: 1.5rem; /* Consistent width for list icons */
+             text-align: center;
+             margin-right: 0.75rem; /* mr-3 */
+         }
+
+
+        /* Grid layout for input counts */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .input-item {
+            text-align: center;
+        }
+        .input-item .icon-style {
+             font-size: 1.75rem;
+             margin-bottom: 0.25rem;
+             display: block; /* Center icon */
+             margin-left: auto;
+             margin-right: auto;
+        }
+
+        /* Styling for index values (now using metric-list) */
+        /* .index-grid class is removed */
+        /* .index-item class is removed */
+        /* .index-item-text class is removed */
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="text-center mb-10 sm:mb-16">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl header-title mb-2">
+                <i class="fas fa-map-marker-alt icon-style icon-large"></i>Hamburg Attractivity Analysis
+            </h1>
+            <p class="text-lg sm:text-xl header-subtitle">Detailed Metrics Summary</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
+
+            <div class="infographic-card card-bg-amber-light">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-compass icon-style icon-large"></i>Analysis Scope
+                </h2>
+                <div class="card-content">
+                    <ul class="metric-list">
+                        <li>
+                            <i class="fas fa-map icon-style"></i>
+                            <div>
+                                <span class="key-number">Hamburg</span>
+                                <span class="metric-label">Area of Interest</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-vector-square icon-style"></i>
+                             <div>
+                                <span class="key-number">1000<span class="metric-unit">m</span></span>
+                                <span class="metric-label">Hexagon Cell Size</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-th icon-style"></i>
+                             <div>
+                                <span class="key-number">1312</span>
+                                <span class="metric-label">Hexagons Analyzed</span>
+                            </div>
+                        </li>
+                    </ul>
+                 </div>
+            </div>
+
+            <div class="infographic-card card-bg-orange-light">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-database icon-style icon-large"></i>Input Features Found
+                </h2>
+                 <div class="card-content input-grid">
+                     <div class="input-item">
+                         <i class="fas fa-tree icon-style"></i>
+                         <span class="key-number">6,011</span>
+                         <span class="metric-label">Parks/Green</span>
+                     </div>
+                      <div class="input-item">
+                         <i class="fas fa-glass-martini-alt icon-style"></i>
+                         <span class="key-number">1,167</span>
+                         <span class="metric-label">Bars/Pubs</span>
+                     </div>
+                      <div class="input-item">
+                         <i class="fas fa-utensils icon-style"></i>
+                         <span class="key-number">4,819</span>
+                         <span class="metric-label">Restaurants</span>
+                     </div>
+                      <div class="input-item">
+                         <i class="fas fa-smile icon-style"></i>
+                         <span class="key-number">146,406</span>
+                         <span class="metric-label">Other Leisure</span>
+                     </div>
+                      <div class="input-item">
+                         <i class="fas fa-bus icon-style"></i>
+                         <span class="key-number">3,660</span>
+                         <span class="metric-label">Bus Stops</span>
+                     </div>
+                      <div class="input-item">
+                         <i class="fas fa-subway icon-style"></i>
+                         <span class="key-number">97</span>
+                         <span class="metric-label">Subway Stations</span>
+                     </div>
+                 </div>
+            </div>
+
+            <div class="infographic-card card-bg-amber-mid">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-star icon-style icon-large"></i>Attractivity Index
+                </h2>
+                 <div class="card-content">
+                     <ul class="metric-list">
+                         <li>
+                             <i class="fas fa-arrow-trend-up icon-style icon-medium"></i>
+                             <div>
+                                 <span class="key-number">0.686</span>
+                                 <span class="metric-label">Maximum</span>
+                             </div>
+                         </li>
+                         <li>
+                             <i class="fas fa-arrow-trend-down icon-style icon-medium"></i>
+                             <div>
+                                 <span class="key-number">0.000</span>
+                                 <span class="metric-label">Minimum</span>
+                             </div>
+                         </li>
+                         <li>
+                             <i class="fas fa-calculator icon-style icon-medium"></i>
+                             <div>
+                                 <span class="key-number">0.202</span>
+                                 <span class="metric-label">Mean</span>
+                             </div>
+                         </li>
+                         <li>
+                             <i class="fas fa-sliders icon-style icon-medium"></i>
+                             <div>
+                                 <span class="key-number">0.215</span>
+                                 <span class="metric-label">Median</span>
+                             </div>
+                         </li>
+                     </ul>
+                 </div>
+            </div>
+
+             <div class="infographic-card card-bg-orange-mid">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-tachometer-alt icon-style icon-large"></i>Key Factors & Hotspots
+                </h2>
+                 <div class="card-content">
+                    <h3 class="font-semibold text-sm text-gray-700 mb-2">Selected Weights:</h3>
+                     <ul class="metric-list mb-4">
+                         <li><i class="fas fa-percentage icon-style"></i><div><span class="key-number">20%</span><span class="metric-label">Bus Stop Access</span></div></li>
+                         <li><i class="fas fa-percentage icon-style"></i><div><span class="key-number">15%</span><span class="metric-label">Bar/Pub Access</span></div></li>
+                          <li><i class="fas fa-percentage icon-style"></i><div><span class="key-number">15%</span><span class="metric-label">Park Access (Distance)</span></div></li>
+                     </ul>
+                     <h3 class="font-semibold text-sm text-gray-700 mb-2">Max Features per Hexagon:</h3>
+                      <ul class="metric-list">
+                         <li><i class="fas fa-glass-martini-alt icon-style"></i><div><span class="key-number">96</span><span class="metric-label">Bars/Pubs</span></div></li>
+                         <li><i class="fas fa-utensils icon-style"></i><div><span class="key-number">191</span><span class="metric-label">Restaurants</span></div></li>
+                         <li><i class="fas fa-bus icon-style"></i><div><span class="key-number">12</span><span class="metric-label">Bus Stops</span></div></li>
+                      </ul>
+                 </div>
+            </div>
+
+
+        </div>
+
+        <footer class="text-center mt-10 sm:mt-16 text-gray-600 text-sm">
+            Infographic based on OSM Data
+        </footer>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburg Public Transport Accessibility - Neo-Brutalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            background-color: transparent; /* Transparent background */
+            color: #111827; /* Darker text for contrast */
+        }
+
+        /* Use Bebas Neue for titles */
+        h1, h2, .header-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em;
+        }
+
+        /* Neo-Brutalist Card Style */
+        .infographic-card {
+            background-color: white;
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #111827; /* Hard shadow effect */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+            height: 100%; /* Make cards in a row equal height */
+            display: flex;
+            flex-direction: column;
+        }
+         .infographic-card .card-content {
+             flex-grow: 1;
+         }
+
+        /* Hover effect for cards */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #0E7490; /* Shifted shadow with accent color (cyan-700) */
+        }
+
+        /* Icon style - use black for stark contrast */
+        .icon-style {
+            color: #111827;
+            width: 1.25rem; /* w-5 */
+            text-align: center;
+            margin-right: 0.5rem; /* mr-2 */
+            flex-shrink: 0;
+        }
+         .icon-large {
+             font-size: 1.5rem;
+             margin-right: 0.75rem; /* mr-3 */
+         }
+         .icon-medium {
+             font-size: 1.25rem;
+             margin-right: 0.5rem;
+         }
+
+
+        /* Header styling */
+        .header-title {
+            font-weight: 400; /* Bebas Neue is inherently bold */
+            color: #111827;
+        }
+        .header-subtitle {
+            color: #4b5563; /* Slightly lighter gray */
+            font-family: 'Jost', sans-serif;
+        }
+
+        /* Specific card background colors (Blues/Teals) */
+        .card-bg-cyan-light {
+             background-color: #cffafe; /* cyan-100 */
+             border-color: #0e7490; /* cyan-700 */
+             box-shadow: 4px 4px 0px #0e7490;
+        }
+         .card-bg-cyan-mid {
+             background-color: #a5f3fc; /* cyan-300 */
+             border-color: #155e75; /* cyan-800 */
+             box-shadow: 4px 4px 0px #155e75;
+         }
+        .card-bg-teal-light {
+             background-color: #ccfbf1; /* teal-100 */
+             border-color: #0f766e; /* teal-700 */
+             box-shadow: 4px 4px 0px #0f766e;
+        }
+        .card-bg-teal-mid {
+             background-color: #99f6e4; /* teal-300 */
+             border-color: #134e4a; /* teal-900 */
+             box-shadow: 4px 4px 0px #134e4a;
+        }
+
+
+        .card-bg-cyan-light:hover,
+        .card-bg-cyan-mid:hover,
+        .card-bg-teal-light:hover,
+        .card-bg-teal-mid:hover {
+            box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+
+
+        /* Text styling for metrics */
+        .key-number {
+            font-weight: 700;
+            color: #111827;
+            font-family: 'Jost', sans-serif;
+            display: block;
+            margin-bottom: 0.1rem;
+            font-size: 1.5rem;
+            line-height: 1.2;
+        }
+        .metric-label {
+             font-size: 0.85em;
+             color: #4b5563;
+             line-height: 1.1;
+        }
+         .metric-unit {
+             font-size: 0.8em;
+             color: #4b5563;
+             margin-left: 0.1em;
+         }
+
+        /* List styling */
+         ul.metric-list {
+             list-style: none;
+             padding-left: 0;
+             margin-top: 0.5rem;
+         }
+         ul.metric-list li {
+             margin-bottom: 1rem;
+             display: flex;
+             align-items: center; /* Vertically align icon and text */
+             min-height: 40px; /* Ensure consistent height */
+         }
+         /* Ensure icons in lists have consistent width */
+         ul.metric-list li .icon-style {
+             width: 1.5rem; /* Consistent width for list icons */
+             text-align: center;
+             margin-right: 0.75rem; /* mr-3 */
+         }
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="text-center mb-10 sm:mb-16">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl header-title mb-2">
+                <i class="fas fa-bus-alt icon-style icon-large"></i>Hamburg Public Transport Accessibility
+            </h1>
+            <p class="text-lg sm:text-xl header-subtitle">GTFS Analysis Summary (2025-04-25)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
+
+            <div class="infographic-card card-bg-cyan-light">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-sliders-h icon-style icon-large"></i>Analysis Parameters
+                </h2>
+                <div class="card-content">
+                    <ul class="metric-list">
+                        <li>
+                            <i class="fas fa-clock icon-style"></i>
+                            <div>
+                                <span class="key-number">07:00 - 09:00</span>
+                                <span class="metric-label">Peak Time Window</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-signal icon-style"></i>
+                             <div>
+                                <span class="key-number">6<span class="metric-unit">dep/hr</span></span>
+                                <span class="metric-label">Frequency Threshold</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-ruler-horizontal icon-style"></i>
+                             <div>
+                                <span class="key-number">400<span class="metric-unit">m</span></span>
+                                <span class="metric-label">Service Area Buffer</span>
+                            </div>
+                        </li>
+                    </ul>
+                 </div>
+            </div>
+
+            <div class="infographic-card card-bg-teal-light">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-map-pin icon-style icon-large"></i>Stop Frequency (Peak)
+                </h2>
+                 <div class="card-content">
+                     <ul class="metric-list">
+                        <li>
+                            <i class="fas fa-hashtag icon-style"></i>
+                            <div>
+                                <span class="key-number">7,744</span>
+                                <span class="metric-label">Total Stops (in BBOX)</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-check-circle icon-style"></i>
+                             <div>
+                                <span class="key-number">6,318</span>
+                                <span class="metric-label">High-Frequency Stops</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-percentage icon-style"></i>
+                             <div>
+                                <span class="key-number">89%</span>
+                                <span class="metric-label">of Stops are High-Frequency</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-wave-square icon-style"></i>
+                             <div>
+                                <span class="key-number">4.2<span class="metric-unit">avg dep/hr</span></span>
+                                <span class="metric-label">at High-Frequency Stops</span>
+                            </div>
+                        </li>
+                    </ul>
+                 </div>
+            </div>
+
+            <div class="infographic-card card-bg-cyan-mid">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-map-marked-alt icon-style icon-large"></i>Well-Serviced Area
+                </h2>
+                 <div class="card-content">
+                     <ul class="metric-list">
+                        <li>
+                            <i class="fas fa-vector-square icon-style"></i>
+                            <div>
+                                <span class="key-number">271<span class="metric-unit">km²</span></span>
+                                <span class="metric-label">Total Well-Serviced Area</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-city icon-style"></i>
+                             <div>
+                                <span class="key-number">7</span>
+                                <span class="metric-label">Districts Analyzed</span>
+                            </div>
+                        </li>
+                     </ul>
+                 </div>
+            </div>
+
+             <div class="infographic-card card-bg-teal-mid">
+                <h2 class="text-xl text-gray-800 mb-4 flex items-center">
+                     <i class="fas fa-chart-pie icon-style icon-large"></i>District Coverage
+                </h2>
+                 <div class="card-content">
+                     <ul class="metric-list">
+                         <li>
+                            <i class="fas fa-calculator icon-style"></i>
+                            <div>
+                                <span class="key-number">38%</span>
+                                <span class="metric-label">Average District Coverage</span>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-sliders icon-style"></i>
+                            <div>
+                                <span class="key-number">44%</span>
+                                <span class="metric-label">Median District Coverage</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-arrow-trend-up icon-style"></i>
+                            <div>
+                                <span class="key-number">70%</span>
+                                <span class="metric-label">Max District Coverage</span>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-check-double icon-style"></i>
+                            <div>
+                                <span class="key-number">2</span>
+                                <span class="metric-label">Districts >= 50% Covered</span>
+                            </div>
+                        </li>
+                      </ul>
+                 </div>
+            </div>
+
+
+        </div>
+
+        <footer class="text-center mt-10 sm:mt-16 text-gray-600 text-sm">
+            Infographic based on HVV gtfs data for 2025
+        </footer>
+
+    </div>
+
+</body>
+</html>
