@@ -275,7 +275,9 @@ This integration creates a layered mobility environment, often referred to as th
 ```
 Expanding this model beyond the city center---by improving service frequency in underserved neighborhoods or introducing complementary pedestrian infrastructure---can elevate walkability standards citywide. This also helps reduce dependency on cars, supports active travel, and makes the urban environment more inclusive, particularly for those without access to private vehicles.
 
-## Integrated Analysis of Urban Quality and Mobility
+# Integrated Analysis of Urban Quality and Mobility
+
+![](https://cdn.pixabay.com/photo/2018/07/06/22/56/skyscraper-3521328_1280.jpg)
 
 By combining attractivity scores with transit accessibility, a more nuanced view of Hamburg's urban fabric emerges. Areas that score highly on both dimensions---such as the city center and parts of Altona---represent well-functioning, accessible, and vibrant urban spaces. These zones can serve as exemplars for integrated urban design and policy.
 
@@ -287,4 +289,3 @@ The findings of this analysis point to several key areas for action. Firstly, hi
 
 Ultimately, the hex-based spatial approach presented here offers a flexible and data-rich foundation for urban diagnostics, investment prioritization, and long-term monitoring of city performance.
 
-![](https://cdn.pixabay.com/photo/2018/07/06/22/56/skyscraper-3521328_1280.jpg)
