@@ -6,18 +6,12 @@ library(dplyr)
 library(leaflet)
 library(lubridate) # For easier date handling
 library(osmdata)
-# --- 1. Define the GTFS data source ---
-# URL provided by the user
-gtfs_url <- "https://daten.transparenz.hamburg.de/Dataport.HmbTG.ZS.Webservice.GetRessource100/GetRessource100.svc/dbe5f144-b806-4377-aac3-d3572b139b23/Upload__hvv_Rohdaten_GTFS_Fpl_20250108.ZIP"
-
-# It's often better to download the file first, then read it locally
-# Option 1: Download first (Recommended)
-gtfs_local_path <- "Data/hvv_gtfs_20200211.zip"
-download.file(gtfs_url, gtfs_local_path, mode = "wb") # 'wb' is important for zip files
-
+library(units)
+library(tibble) # Needed for summary table enframe
+library(htmlwidgets) # For saveWidget
 
 # --- Settings ---
-gtfs_local_path <- "Data/hvv_gtfs_20200211.zip" # Make sure this file exists!
+gtfs_local_path <- "Data/hvv_gtfs_20200211.zip" # CRITICAL: This file MUST exist!
 peak_start_time <- "07:00:00"
 peak_end_time <- "09:00:00"
 frequency_threshold_dep_per_hr <- 6 # Minimum departures/hour for "frequent"
@@ -28,184 +22,238 @@ target_crs <- st_crs(32632)
 # WGS84 for Leaflet output
 wgs84_crs <- st_crs(4326)
 
-# --- 1. Read GTFS Data ---
+# --- Bounding Box for Filtering ---
+filter_bbox_coords <- c(xmin = 9.626770, ymin = 53.383328, xmax = 10.351868, ymax = 53.748711)
+filter_bbox_poly_wgs84 <- st_bbox(filter_bbox_coords) %>%
+  st_as_sfc() %>%
+  st_set_crs(wgs84_crs)
+filter_bbox_poly_proj <- st_transform(filter_bbox_poly_wgs84, target_crs)
+print(paste("Using filter bounding box:", paste(round(filter_bbox_coords,4), collapse=", ")))
 
+# --- 1. Define GTFS data source ---
+# Assumes file exists, NO download check
+print(paste("Using GTFS file:", gtfs_local_path))
+
+# --- 2. Read GTFS Data ---
+print("Reading GTFS data...")
 hvv_gtfs <- read_gtfs(gtfs_local_path)
 print("GTFS data read successfully.")
 
-# --- 2. Identify Weekday Service IDs ---
-# Find service IDs active on a typical Tuesday in Feb 2020
-# (Feb 11, 2020 was a Tuesday)
+# --- 3. Identify Weekday Service IDs ---
+print("Identifying active weekday service IDs...")
+# Use current system date directly - ENSURE GTFS covers this date!
 target_date <- as.Date(Sys.Date())
+print(paste("Using target date for service ID check:", format(target_date, "%Y-%m-%d (%A)")))
 
-# Check calendar.txt first (defines recurring weekly services)
-weekday_service_ids <- hvv_gtfs$calendar %>%
+# Check calendar.txt (assumes it exists)
+weekday_service_ids_base <- hvv_gtfs$calendar %>%
   filter(tuesday == 1, # Service runs on Tuesdays
          start_date <= target_date,
          end_date >= target_date) %>%
   pull(service_id)
 
-
-# Check calendar_dates.txt for exceptions (added/removed services on specific dates)
-
-# Services added on the target date
+# Check calendar_dates.txt (assumes it exists)
+# Assumes 'date' column is already Date type or correct format
+hvv_gtfs$calendar_dates <- hvv_gtfs$calendar_dates %>% mutate(date = ymd(date))
 added_service_ids <- hvv_gtfs$calendar_dates %>%
   filter(date == target_date, exception_type == 1) %>%
   pull(service_id)
-
-# Services explicitly removed on the target date
 removed_service_ids <- hvv_gtfs$calendar_dates %>%
   filter(date == target_date, exception_type == 2) %>%
   pull(service_id)
 
 # Update the list of active service IDs
-weekday_service_ids <- setdiff(union(weekday_service_ids, added_service_ids), removed_service_ids)
+weekday_service_ids <- setdiff(union(weekday_service_ids_base, added_service_ids), removed_service_ids)
+print(paste("Identified", length(weekday_service_ids), "active service IDs for", format(target_date)))
 
-
-print(paste("Identified", length(weekday_service_ids), "active service IDs for", target_date))
-
-# --- 3. Calculate Stop Frequencies during Morning Peak ---
+# --- 4. Calculate Stop Frequencies during Morning Peak ---
 print(paste("Calculating stop frequencies between", peak_start_time, "and", peak_end_time, "..."))
 
-# Filter stop_times to include only trips running on the target weekday services
-# This is important for accurate frequency calculation if get_stop_frequencies doesn't handle service_id filtering internally
+# Filter stop_times (assumes weekday_service_ids has members)
 gtfs_filtered <- hvv_gtfs
 trips_on_weekday <- gtfs_filtered$trips %>% filter(service_id %in% weekday_service_ids)
 gtfs_filtered$stop_times <- gtfs_filtered$stop_times %>% filter(trip_id %in% trips_on_weekday$trip_id)
 
-
-
-stop_freq_peak <- get_stop_frequency(gtfs_filtered, # Use the filtered GTFS object
+# Calculate frequencies (assumes function works and returns data)
+stop_freq_peak <- get_stop_frequency(gtfs_filtered,
                                      start_time = peak_start_time,
-                                     end_time = peak_end_time)
+                                     end_time = peak_end_time,
+                                     service_ids = weekday_service_ids)
 
-# Calculate departures per hour (frequency = n_departures / time_window_hours)
+# Calculate departures per hour (assumes result has n_departures)
 time_window_hours <- (lubridate::hms(peak_end_time) - lubridate::hms(peak_start_time)) / lubridate::hours(1)
+time_window_hours_num <- as.numeric(time_window_hours)
 stop_freq_peak <- stop_freq_peak %>%
-  mutate(departures_per_hr = n_departures / as.numeric(time_window_hours)) # Use as.numeric on duration
+  mutate(departures_per_hr = n_departures / time_window_hours_num)
 
-# --- 4. Identify High-Frequency Stops ---
+# --- 5. Identify High-Frequency Stops ---
 print("Identifying high-frequency stops...")
 high_freq_stop_ids <- stop_freq_peak %>%
   filter(departures_per_hr >= frequency_threshold_dep_per_hr) %>%
   pull(stop_id)
 
-# --- 5. Get Spatial Stop Locations ---
-stops_sf <- stops_as_sf(hvv_gtfs$stops)
+# --- 6. Get Spatial Stop Locations & Filter by BBOX ---
+print("Getting spatial stop locations...")
+stops_sf_all <- stops_as_sf(hvv_gtfs$stops) # All stops initially
 
-# Filter for high-frequency stops
+# APPLY BOUNDING BOX FILTER TO STOPS (Assume CRS is WGS84 or transform works)
+print(paste("Filtering stops to bounding box... Original count:", nrow(stops_sf_all)))
+stops_sf_all <- st_transform(stops_sf_all, wgs84_crs) # Ensure WGS84
+stops_sf <- st_filter(stops_sf_all, filter_bbox_poly_wgs84, .predicate = st_within)
+print(paste("Filtered stops count (within BBOX):", nrow(stops_sf)))
+
+# Filter spatial stops for high-frequency stops (within BBOX)
 high_freq_stops_sf <- stops_sf %>%
   filter(stop_id %in% high_freq_stop_ids) %>%
-  # Join frequency data for potential popups/styling
   left_join(stop_freq_peak %>% select(stop_id, departures_per_hr), by = "stop_id")
+print(paste("Found", nrow(high_freq_stops_sf), "high-frequency stops within the bounding box."))
 
-print(paste("Found", nrow(high_freq_stops_sf), "stops meeting frequency threshold."))
-
-# --- 6. Create Service Area Buffers ---
+# --- 7. Create Service Area Buffers & Clip to BBOX ---
 print("Creating service area buffers...")
-# Project stops to target CRS for accurate buffering
+
+# Project stops (Assume high_freq_stops_sf has rows)
 high_freq_stops_proj <- st_transform(high_freq_stops_sf, target_crs)
 
 # Create buffers
 service_buffers_proj <- st_buffer(high_freq_stops_proj, dist = walking_distance_m)
 
-# Dissolve overlapping buffers into one multipart polygon
-well_serviced_area_proj <- st_union(service_buffers_proj)
+# Dissolve overlapping buffers
+well_serviced_area_proj_unclipped <- st_union(service_buffers_proj)
 
-# Transform back to WGS84 for Leaflet
+# CLIP Service Area Buffer to BBOX
+print("Clipping service area to bounding box...")
+well_serviced_area_proj_unclipped <- st_make_valid(well_serviced_area_proj_unclipped)
+filter_bbox_poly_proj <- st_make_valid(filter_bbox_poly_proj) # Ensure valid
+well_serviced_area_proj <- st_intersection(well_serviced_area_proj_unclipped, filter_bbox_poly_proj)
+print("Service area clipped.")
+
+# Calculate area after clipping
+clipped_area_m2 <- st_area(well_serviced_area_proj)
+print(paste("Clipped well-serviced area:", round(units::set_units(clipped_area_m2, "km^2"), 2)))
+
+# Transform final clipped area and filtered stops back to WGS84
 well_serviced_area_wgs84 <- st_transform(well_serviced_area_proj, wgs84_crs)
-high_freq_stops_wgs84 <- st_transform(high_freq_stops_sf, wgs84_crs) # Also transform stops
-all_stops_wgs84 <- st_transform(stops_sf, wgs84_crs) # And all stops for context
+high_freq_stops_wgs84 <- st_transform(high_freq_stops_sf, wgs84_crs)
+all_stops_wgs84 <- st_transform(stops_sf, wgs84_crs) # Use the BBOX-filtered stops_sf
 
-# --- 7. Optional: Analyze Coverage by District ---
+# --- 8. Analyze Coverage by District ---
+# Assumes service area exists and OSM query works
+print("Analyzing district coverage using the clipped service area...")
 print("Querying OSM for administrative boundaries (Districts)...")
+hamburg_bbox_osm <- c(9.6, 53.3, 10.4, 53.8) # Bbox for OSM query
 
-# --- 7a Define Area of Interest (AOI) ---
-aoi_name <- "Hamburg, Germany"
-aoi_bbox <- getbb(aoi_name)
-target_crs <- st_crs(32632) # UTM Zone 32N for Hamburg
-
-districts_osm <- opq(bbox = aoi_bbox) %>%
-  add_osm_feature(key = "admin_level", value = "9") %>% # Stadtteile in Hamburg
+districts_osm <- opq(bbox = hamburg_bbox_osm) %>%
+  add_osm_feature(key = "admin_level", value = "9") %>%
+  add_osm_feature(key = "boundary", value = "administrative") %>%
   osmdata_sf()
 
-# Assume multipolygons are returned
-districts_sf <- districts_osm$osm_multipolygons %>%
-  filter(!st_is_empty(.)) %>% # Basic empty check
+# Process districts (Assume query successful and returns multipolygons)
+districts_sf_raw <- districts_osm$osm_multipolygons %>%
+  filter(!st_is_empty(.)) %>%
   st_make_valid() %>%
-  select(osm_id, name) # Keep only relevant columns
+  select(osm_id, name)
 
-districts_proj <- st_transform(districts_sf, target_crs)
-districts_proj <- st_transform(districts_sf, target_crs) # Project if not already done
+# Project districts
+districts_proj <- st_transform(districts_sf_raw, target_crs)
 
+# Calculate district area
 districts_proj$district_area_m2 <- as.numeric(st_area(districts_proj))
-  
-# Calculate intersection area
-intersection_proj <- st_intersection(st_make_valid(districts_proj), st_make_valid(well_serviced_area_proj)) # Ensure valid geometries
+
+# Calculate intersection area with the clipped service area
+intersection_proj <- st_intersection(st_make_valid(districts_proj), st_make_valid(well_serviced_area_proj)) %>% mutate(unique_district_join_id = row_number())
 intersection_proj$intersection_area_m2 <- as.numeric(st_area(intersection_proj))
-intersection_proj <- intersection_proj %>%
-  mutate(unique_poly_id = row_number())
+
 # Aggregate intersection area by district
+districts_proj <- districts_proj %>% mutate(unique_district_join_id = row_number())
 coverage_by_district <- intersection_proj %>%
   st_drop_geometry() %>%
-  group_by(unique_poly_id) %>% # Assuming unique_poly_id exists from density step
-  summarise(covered_area_m2 = sum(intersection_area_m2))
-districts_proj <- districts_proj %>%
-  mutate(unique_poly_id = row_number())
+  group_by(unique_district_join_id) %>%
+  summarise(covered_area_m2 = sum(intersection_area_m2, na.rm = TRUE))
+
 # Join back and calculate percentage
 districts_with_coverage <- districts_proj %>%
-  left_join(coverage_by_district, by = "unique_poly_id") %>%
+  left_join(coverage_by_district, by = "unique_district_join_id") %>%
   mutate(
     covered_area_m2 = ifelse(is.na(covered_area_m2), 0, covered_area_m2),
     coverage_pct = round((covered_area_m2 / district_area_m2) * 100, 1)
   ) %>%
-  mutate(coverage_pct = ifelse(district_area_m2 == 0, 0, coverage_pct)) # Handle zero area districts
+  mutate(coverage_pct = pmin(coverage_pct, 100)) # Cap at 100%
 
 # Transform for Leaflet
-districts_coverage_wgs84 <- st_transform(districts_with_coverage, wgs84_crs)
-# Create palette for district coverage
-pal_coverage <- colorNumeric("YlGnBu", domain = districts_coverage_wgs84$coverage_pct, na.color = "#bdbdbd")
+districts_coverage_wgs84 <- st_transform(districts_with_coverage, wgs84_crs)%>%
+  filter(name %in% c("Bergedorf", "Harburg", "Hamburg-Mitte", "Altona", "Eimsbüttel", "Hamburg-Nord", "Wandsbek"))
+# Define your custom colors
+neo_brutalist_colors <- c("#69D2E7", "#90EE90", "#E3A018", "#FF69B4", "#9723c9")
 
+# Use colorNumeric for a smooth gradient interpolating between the colors
+valid_coverage_values <- districts_coverage_wgs84$coverage_pct[!is.na(districts_coverage_wgs84$coverage_pct)]
+if (length(valid_coverage_values) > 0) {
+  pal_coverage <- colorNumeric(
+    palette = neo_brutalist_colors,
+    domain = valid_coverage_values, # Use only non-NA values for domain calculation
+    na.color = "#bdbdbd"       # Color for NA values
+  )
+} else {
+  # Fallback if no valid data - create a dummy palette
+  print("Warning: No valid coverage percentage values found for palette domain. Using dummy.")
+  pal_coverage <- colorNumeric("Greys", domain = c(0,100), na.color = "#bdbdbd")
+}
+print("District coverage analysis complete.")
 
-# --- 8. Visualize ---
+# --- 9. Visualize ---
 print("Creating Leaflet map...")
-
-# Define center coordinates for Hamburg (approximate)
-hamburg_center_lon <- 10.0
-hamburg_center_lat <- 53.55
-initial_zoom <- 10 # Adjust as needed
-
+map_center_lon <- mean(filter_bbox_coords[c(1, 3)])
+map_center_lat <- mean(filter_bbox_coords[c(2, 4)])
+initial_zoom <- 11
 
 # Base map
-pt_map <- leaflet() %>%
-  # addTiles(group = "OSM Base Map")
-  addProviderTiles(providers$CartoDB.Positron, group = "Base Map")%>%
-  setView(lng = hamburg_center_lon, lat = hamburg_center_lat, zoom = initial_zoom)
+pt_map <- leaflet(options = leafletOptions(preferCanvas = TRUE)) %>%
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") %>%
+  setView(lng = map_center_lon, lat = map_center_lat, zoom = initial_zoom)
 
-# Add layer for all stops (optional, for context)
+# Add layer for all stops within BBOX
 pt_map <- pt_map %>%
   addCircleMarkers(data = all_stops_wgs84,
-                   radius = 1, weight=0.5, color = "#ffcc00", fillOpacity = 0.3, stroke = FALSE,
-                   popup = ~stop_name,
-                   group = "All Stops (Feb 2020)")
+                   radius = 1, weight=0.5, color = "#ffcc00",
+                   fillOpacity = 0.3, stroke = FALSE,
+                   popup = ~htmltools::htmlEscape(stop_name),
+                   group = "All Stops (within BBOX)")
 
-# Add layer for high-frequency stops
+# Add layer for high-frequency stops within BBOX
 pt_map <- pt_map %>%
   addCircleMarkers(data = high_freq_stops_wgs84,
-                   radius = 2, weight=1, color = "#ff3b30", fillColor="#ff3b30", fillOpacity = 0.8, stroke = TRUE,
-                   popup = ~paste(stop_name, "<br>", round(departures_per_hr, 1), "dep/hr"),
+                   radius = 2, weight=1, color = "#E31A1C", fillColor="#E31A1C",
+                   fillOpacity = 0.8, stroke = TRUE,
+                   popup = ~paste(htmltools::htmlEscape(stop_name), "<br>",
+                                  round(departures_per_hr, 1), "dep/hr"),
                    group = "High-Frequency Stops")
 
-# Add layer for the well-serviced area buffer
+# Add layer for the clipped well-serviced area buffer
 pt_map <- pt_map %>%
   addPolygons(data = well_serviced_area_wgs84,
               color = "#007aff", weight = 1, smoothFactor = 0.5,
               opacity = 0.8, fillOpacity = 0.2,
-              group = "Well-Serviced Area (400m Buffer)")
+              group = "Well-Serviced Area (Clipped)")
 
+# Define overlay groups
+overlay_groups <- c("Filter BBOX", "All Stops (within BBOX)", "High-Frequency Stops",
+                    "Well-Serviced Area (Clipped)", "District Coverage (%)")
 
-# Define layer groups without the optional one
-overlay_groups <- c("All Stops (Feb 2020)", "High-Frequency Stops", "Well-Serviced Area (400m Buffer)")
+# Add district coverage layer
+pt_map <- pt_map %>%
+  addPolygons(data = districts_coverage_wgs84,
+              fillColor = ~pal_coverage(coverage_pct),
+              weight = 1, 
+              opacity = 0.9, 
+              color = "white", 
+              dashArray = "3", 
+              fillOpacity = 0.6,
+              highlightOptions = highlightOptions(weight = 2, color = "#666", dashArray = "", fillOpacity = 0.7, bringToFront = TRUE),
+              label = ~paste(htmltools::htmlEscape(name), ": ", coverage_pct, "%"),
+              labelOptions = labelOptions(style = list("font-weight" = "normal", padding = "3px 8px"), textsize = "12px", direction = "auto"),
+              group = "District Coverage (%)") %>%
+  addLegend(data = districts_coverage_wgs84, pal = pal_coverage, values = ~coverage_pct, opacity = 0.7, title = "District<br>Coverage (%)",
+            position = "bottomright", group = "District Coverage (%)")
 
 
 # Add layer controls
@@ -215,13 +263,97 @@ pt_map <- pt_map %>%
     overlayGroups = overlay_groups,
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
-  # Initially hide all stops layer for clarity
-  hideGroup("All Stops (Feb 2020)") # %>%
+  hideGroup(c("All Stops (within BBOX)"))%>% # Hide initially
+  setView( lng = 10
+           , lat = 53.4
+           , zoom = 10 
+           ) %>%
+  setMaxBounds( lng1 = 9.626770
+                , lat1 = 53.383328
+                , lng2 = 10.351868
+                , lat2 = 53.748711 
+  )
+
 
 # Print the map
 print(pt_map)
 
-library(htmlwidgets)
+# Ensure Widgets directory exists
+if (!dir.exists("Widgets")) { dir.create("Widgets") }
+saveWidget(pt_map, file = "Widgets/pt_map_filtered_clipped_straightforward.html", selfcontained = TRUE)
+print("Straightforward filtered/clipped map saved to Widgets/pt_map_filtered_clipped_straightforward.html")
 
-saveWidget(pt_map, file = "Widgets/pt_map.html", selfcontained = TRUE)
 
+# --- 10. Create Updated Summary Table ---
+print("Generating updated GTFS analysis summary table (straightforward)...")
+gtfs_rounding_digits <- 1
+summary_metrics <- list()
+
+# 1. Analysis Context & Parameters
+summary_metrics[["Analysis Target Date"]] <- format(target_date)
+summary_metrics[["Peak Time Window"]] <- paste(peak_start_time, "-", peak_end_time)
+summary_metrics[["Frequency Threshold (dep/hr)"]] <- frequency_threshold_dep_per_hr
+summary_metrics[["Service Area Buffer (m)"]] <- walking_distance_m
+summary_metrics[["GTFS Data Source Hint"]] <- basename(gtfs_local_path)
+summary_metrics[["Filter BBOX Applied"]] <- paste(round(filter_bbox_coords, 4), collapse=", ")
+
+# 2. Overall GTFS Stats (Reflecting BBOX filter)
+total_stops_in_bbox <- nrow(stops_sf)
+summary_metrics[["Total Stops in GTFS (within BBOX)"]] <- total_stops_in_bbox
+summary_metrics[["Active Weekday Service IDs"]] <- length(weekday_service_ids)
+
+# 3. Peak Frequency Analysis Results (Reflecting BBOX filter)
+num_high_freq_stops_in_bbox <- nrow(high_freq_stops_sf)
+num_stops_analyzed_in_bbox <- length(intersect(stop_freq_peak$stop_id, stops_sf$stop_id))
+summary_metrics[["Stops with Departures in Peak (within BBOX)"]] <- num_stops_analyzed_in_bbox
+summary_metrics[["High-Frequency Stops (within BBOX, Count)"]] <- num_high_freq_stops_in_bbox
+summary_metrics[["High-Frequency Stops (within BBOX, %)"]] <- round((num_high_freq_stops_in_bbox / num_stops_analyzed_in_bbox) * 100, gtfs_rounding_digits)
+
+# Avg/Median departures
+freq_stats_filtered <- high_freq_stops_sf %>%
+  st_drop_geometry() %>%
+  filter(!is.na(departures_per_hr)) %>%
+  summarise(
+    mean_dep_hr = mean(departures_per_hr),
+    median_dep_hr = median(departures_per_hr)
+  )
+summary_metrics[["Avg. Departures/Hour (High-Freq Stops in BBOX)"]] <- round(freq_stats_filtered$mean_dep_hr, gtfs_rounding_digits)
+summary_metrics[["Median Departures/Hour (High-Freq Stops in BBOX)"]] <- round(freq_stats_filtered$median_dep_hr, gtfs_rounding_digits)
+
+# 4. Service Area Coverage Results (Reflecting BBOX clip)
+total_serviced_area_clipped <- st_area(well_serviced_area_proj)
+summary_metrics[["Total Well-Serviced Area (Clipped, km²)"]] <- round(set_units(total_serviced_area_clipped, "km^2"), 2)
+
+# 5. District Coverage Analysis Results (Reflecting clipped service area)
+district_stats_filtered <- districts_with_coverage %>%
+  filter(name %in% c("Bergedorf", "Harburg", "Hamburg-Mitte", "Altona", "Eimsbüttel", "Hamburg-Nord", "Wandsbek"))%>%
+  st_drop_geometry() %>%
+  filter(!is.na(coverage_pct)) %>%
+  summarise(
+    num_districts = n(),
+    avg_coverage = mean(coverage_pct, na.rm = TRUE),
+    median_coverage = median(coverage_pct, na.rm = TRUE),
+    min_coverage = min(coverage_pct, na.rm = TRUE),
+    max_coverage = max(coverage_pct, na.rm = TRUE),
+    districts_over_50_pct = sum(coverage_pct >= 50, na.rm = TRUE),
+    districts_over_80_pct = sum(coverage_pct >= 80, na.rm = TRUE)
+  )
+summary_metrics[["Number of Districts Analyzed (Coverage)"]] <- district_stats_filtered$num_districts
+summary_metrics[["Average District Coverage (%, Clipped Area)"]] <- round(district_stats_filtered$avg_coverage, gtfs_rounding_digits)
+summary_metrics[["Median District Coverage (%, Clipped Area)"]] <- round(district_stats_filtered$median_coverage, gtfs_rounding_digits)
+summary_metrics[["Min District Coverage (%, Clipped Area)"]] <- round(district_stats_filtered$min_coverage, gtfs_rounding_digits)
+summary_metrics[["Max District Coverage (%, Clipped Area)"]] <- round(district_stats_filtered$max_coverage, gtfs_rounding_digits)
+summary_metrics[["Districts >= 50% Coverage (Clipped Area, Count)"]] <- district_stats_filtered$districts_over_50_pct
+summary_metrics[["Districts >= 80% Coverage (Clipped Area, Count)"]] <- district_stats_filtered$districts_over_80_pct
+
+# --- Format and Print Updated Table ---
+summary_table_gtfs_filtered <- tibble::enframe(summary_metrics, name = "Metric", value = "Value")
+summary_table_gtfs_filtered$Value <- sapply(summary_table_gtfs_filtered$Value, function(x) {
+  if (is.numeric(x)) format(x, digits = 2)
+  else if (is.numeric(x) && is.na(x)) "NA" # Should ideally not happen now
+  else as.character(x)
+})
+print("--- GTFS Frequency Analysis Summary (Filtered & Clipped - Straightforward) ---")
+print(as.data.frame(summary_table_gtfs_filtered))
+
+print("--- Straightforward Script Finished ---")

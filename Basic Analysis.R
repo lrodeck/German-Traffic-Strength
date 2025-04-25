@@ -6,7 +6,7 @@ library(dplyr)       # For data manipulation
 library(leaflet)     # For interactive maps
 library(units)       # For handling units explicitly
 library(lwgeom)      # Potentially needed for st_make_valid
-extrafonts::loadfonts()
+extrafont::loadfonts()
 # Potentially needed for later analysis steps:
 # library(tidytransit) # For GTFS (public transport schedules)
 # library(sfnetworks)  # For network analysis
@@ -77,12 +77,13 @@ green_spaces_sf <- green_spaces_osm$osm_polygons %>%
 print("Querying OSM for building points/nodes...")
 # This queries NODES tagged as buildings, much lighter than polygons.
 # It might miss buildings only mapped as areas.
-buildings_osm_points <- opq(bbox = aoi_bbox) %>%
+buildings_osm_points <- opq(bbox = aoi_bbox, osm_types = "node") %>%
   add_osm_feature(key = "building")%>%
   osmdata_sf()
 
-building_points_sf <- buildings_osm_points$osm_points %>% filter(!st_is_empty(.)) # Basic empty check
+building_points_sf <- buildings_osm_points %>% filter(!st_is_empty(.)) # Basic empty check
 print(paste("Found", nrow(building_points_sf), "OSM nodes tagged as buildings."))
+
 
 
 # Get Amenities/Shops (Points of Interest - POIs)
