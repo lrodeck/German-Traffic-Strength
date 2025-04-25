@@ -14,7 +14,7 @@ Hamburg, Germany's second-largest city and a major hub for culture, commerce, an
 
 In this project, we explore the urban capabilities of Hamburg through the lens of **spatial accessibility and attractivity**. Using a hexagonal grid system layered over the city and enriched with live OpenStreetMap data, we evaluate how different areas of Hamburg perform across key dimensions: proximity to parks and major transit hubs, the density of public transport stops, and the availability of urban amenities like bars, restaurants, and leisure spaces.
 
-Our analysis culminates in a composite **Attractivity Index**, a customizable metric designed to encapsulate the urban appeal of each neighborhood-level hexagon. This index helps reveal spatial patterns---highlighting clusters of urban vitality as well as underserved areas---through interactive visualizations and detailed geospatial metrics.
+Our analysis culminates in a composite **Urban Attractivity Index**, a customizable metric designed to encapsulate the urban appeal of each neighborhood-level hexagon. This index helps reveal spatial patterns---highlighting clusters of urban vitality as well as underserved areas---through interactive visualizations and detailed geospatial metrics.
 
 Additionally, we integrate public transport schedule data (GTFS) to assess real-world service frequency and district-level coverage, further grounding our analysis in the lived experience of Hamburg's mobility landscape.
 
@@ -26,9 +26,9 @@ This section concentrates on gettig to know the theoretical foundations and cont
 
 ## Foundations of Urban Design
 
-Urban design emerged as a distinct discipline in the mid-20th century, addressing the complexities of rapidly urbanizing societies. A pivotal moment in this evolution was the 1956 Urban Design Conference at Harvard University, organized by José Luis Sert. This conference marked the beginning of urban design as a self-conscious pursuit, distinct from architecture, landscape architecture, and urban planning [@harvard2006].
+Urban design emerged as a distinct discipline in the mid-20th century, addressing the complexities of rapidly urbanizing societies. A pivotal moment in this evolution was the 1956 Urban Design Conference at Harvard University, organized by José Luis Sert [@barnett2006a]. This conference marked the beginning of urban design as a self-conscious pursuit, distinct from architecture, landscape architecture, and urban planning.
 
-Prior to this, urban design principles were often embedded within broader architectural and planning practices. The 1956 conference catalyzed a paradigm shift, emphasizing the need for a multidisciplinary approach to urban development. It highlighted the importance of integrating architectural design with social, economic, and environmental considerations to create cohesive urban environments [@barnett2006].
+Prior to this, urban design principles were often embedded within broader architectural and planning practices. The 1956 conference catalyzed a paradigm shift, emphasizing the need for a multidisciplinary approach to urban development. It highlighted the importance of integrating architectural design with social, economic, and environmental considerations to create cohesive urban environments [@barnett2006b].
 
 This period also saw the emergence of key figures whose work laid the foundation for modern urban design theory. Their contributions underscored the significance of human-scale development, the integration of public spaces, and the necessity of considering the lived experiences of urban inhabitants.
 
