@@ -1,9 +1,14 @@
 ---
 title: "Exploring Hamburg’s Urban Capabilities: A Data-Driven Dive into Attractivity and Accessibility"
+image: "https://cdn.pixabay.com/photo/2018/01/14/11/59/architecture-3081677_1280.jpg"
 bibliography: References/references.bib
 format: html
 editor: visual
 ---
+
+![](https://cdn.pixabay.com/photo/2018/01/14/11/59/architecture-3081677_1280.jpg){width="573"}
+
+# Introduction
 
 Hamburg, Germany's second-largest city and a major hub for culture, commerce, and innovation, presents a fascinating case study in urban form and function. As cities globally grapple with how to best serve their residents—balancing livability, sustainability, and mobility—Hamburg offers a rich canvas of infrastructure, green spaces, and transportation systems worth analyzing in detail.
 
@@ -15,184 +20,451 @@ Additionally, we integrate public transport schedule data (GTFS) to assess real-
 
 Whether you're an urbanist, policymaker, or simply curious about how cities function, this analysis aims to make Hamburg's urban DNA both visible and actionable. Read on to discover how the city's features come together to shape where people want to live, move, and spend their time.
 
-## 📘 Literature Review: Foundations and Contemporary Perspectives in Urban Design
+# Theory
 
-### Introduction
+This section concentrates on gettig to know the theoretical foundations and contemporary perspectives in urban design. I will describe the historical development of this field as well as contemporary perspectives. I will also delve deeper into how this field is and has been relevant in the realm of political science. City planning and urban design seems to be an obvious and relevant field of governance that should be observed with care.
 
-Urban design is an interdisciplinary field that shapes the physical setting for life in cities, towns, and villages. It integrates elements from architecture, landscape architecture, and urban planning to create functional and aesthetically pleasing urban environments. Over time, various theories and approaches have emerged, reflecting the evolving needs and values of societies.
+## Foundations of Urban Design
 
+Urban design emerged as a distinct discipline in the mid-20th century, addressing the complexities of rapidly urbanizing societies. A pivotal moment in this evolution was the 1956 Urban Design Conference at Harvard University, organized by José Luis Sert. This conference marked the beginning of urban design as a self-conscious pursuit, distinct from architecture, landscape architecture, and urban planning [@harvard2006].
+
+Prior to this, urban design principles were often embedded within broader architectural and planning practices. The 1956 conference catalyzed a paradigm shift, emphasizing the need for a multidisciplinary approach to urban development. It highlighted the importance of integrating architectural design with social, economic, and environmental considerations to create cohesive urban environments [@barnett2006].
+
+This period also saw the emergence of key figures whose work laid the foundation for modern urban design theory. Their contributions underscored the significance of human-scale development, the integration of public spaces, and the necessity of considering the lived experiences of urban inhabitants.
+
+::::: columns
+::: column
 ### Historical Foundations
 
-The formal study of urban design gained prominence in the mid-20th century. The 1956 Harvard Conference is often cited as a pivotal moment, marking the delineation of urban design as a distinct discipline [@sciencedirect2023].
+Urban design, as a formal discipline, is a relatively recent invention, but its historical foundations stretch back centuries—embedded in practices of city-making, cultural symbolisms, and shifting ideological paradigms. Understanding its evolution necessitates tracing not only the architectural and planning traditions but also the social, philosophical, and institutional contexts that shaped its disciplinary identity.
 
-> "Urban design emerged as a distinct field in the mid-20th century, emphasizing the importance of spatial organization, human scale, and the integration of public spaces."
+Alfonso Raposo offers a genealogical perspective on the emergence of urban design, focusing on its disciplinary and institutional foundations. He argues that urban design’s origins are rooted in a multifaceted intersection of architecture, planning, and social policy. Its formal recognition evolved alongside growing institutional demands in academia, governance, and public planning sectors. These demands emerged from increasingly complex urban needs, which necessitated the integration of aesthetic, functional, and social considerations into spatial planning processes [@raposo2006diseno].
+:::
 
-### Key Theoretical Contributions
+::: column
+Wolfgang Sonne delves deeper into the historiography of urban design, highlighting that early urban design history was not strictly confined to architectural history [@sonne2005birth]. Influences ranged from Camillo Sitte’s formal urban theories to interdisciplinary works found in planning texts like Burnham’s *Plan of Chicago* (1909). Sonne emphasizes that the urban design narrative was never purely architectural—it reflected economic, political, and artistic interpretations of urban form. This multidisciplinary spirit laid the foundation for urban design's emergence as a hybrid field focused on interpreting, shaping, and narrating the built environment.
 
-Several scholars have significantly influenced urban design theory:
+The Modernist movement in the mid-20th century brought a paradox to the historical consciousness of urban design. Michael Hebbert critiques this era for its attempt to sever ties with historical legacies. Modernist urbanism, inspired by avant-garde abstraction (as in Mondrian’s art), aimed to reinvent urban space from an ideological “blank slate” [@hebbert2017historical]. Yet, as Hebbert points out, this erasure was theoretical—the urban canvas was already layered with social, economic, and cultural complexity. Thus, Modernism became both a rejection and reinterpretation of history, giving rise to new urban design doctrines that aimed to supersede tradition while inadvertently reconfiguring it.
+:::
+:::::
 
--   **Kevin Lynch** introduced concepts like "imageability" and "legibility," emphasizing how individuals perceive and navigate urban environments [@lynch1960].
+Ali Madanipour’s work *Designing the City of Reason* examines this philosophical pivot by situating urban design within the rise of rationalist thought. He traces how Enlightenment ideals—order, logic, and functionality—shaped urban planning ideals. Over time, these rationalist foundations informed the physical layouts of cities and their symbolic representations. Madanipour argues that cities became artifacts of belief systems, where philosophical doctrines like positivism and utilitarianism were inscribed onto the urban fabric [@madanipour2007reason].
 
--   **Jane Jacobs** championed the idea of "eyes on the street," advocating for mixed-use developments and vibrant street life to enhance safety and community engagement [@jacobs1961].
+Peter Laurence offers a compelling account of the post-World War II phase, when urban design began to crystallize into a coherent research agenda. Through the support of the Rockefeller Foundation, key figures such as Jane Jacobs and Kevin Lynch conducted pioneering work that emphasized user experience, visual perception, and socio-spatial equity. @laurence2006jacobs underscores Jacobs' critical role in challenging top-down models of urban renewal, advocating for organic urbanism and citizen-centered design. This period, he asserts, marks the definitive emergence of urban design as a distinct and applied research field, enriched by empirical and participatory frameworks.
 
--   **Christopher Alexander** proposed a pattern language for design, focusing on recurring solutions to common design problems [@alexander1977].
+The historical foundations of urban design are deeply layered, shaped by interdisciplinary influences and ideological shifts. From its early theoretical roots in classical and Renaissance town-making, through its Modernist reinvention and post-war critique, urban design has evolved as both a reflection and determinant of societal values. Today’s urban design carries this complex heritage, demanding a historically informed and context-sensitive approach to shaping cities.
 
--   **Nikos Salingaros** applied principles from mathematics and physics to urban morphology, exploring concepts like fractals and networks in city structures [@salingaros2005].
+### Foundational Contributions
 
-> "The structure of urban space can be understood through mathematical principles, revealing patterns that contribute to the vitality of cities." [@salingaros2005]
+::::: columns
+::: column
+Urban design's historical foundations are tightly linked to the development of cities, often through utilitarian and aesthetic lenses. Yet, as argued by @oktay2016critical, the ambiguity of urban design’s boundaries—between architecture, planning, and landscape architecture—has prompted calls for clearer definition and disciplinary identity.
+
+The discipline also reflects a dynamic interplay between form and function, with urban form shaping social interaction and identity. @hoffmann2001perspective conceptualize design not as a linear process, but as a set of evolving perspectives—underscoring urban design as an iterative, creative discipline that navigates between constraints and innovation.
+
+Philip D. Plowright and Anirban Adhya offer one of the most recent and accessible contributions to the conceptual terrain of urban design. In *Urban Design Made by Humans*, they emphasize that the foundation of urban space lies in the embodied experiences of its users [@plowright2022humans]. Their framework organizes 56 concepts around how people perceive, navigate, and interact with cities. According to the authors, urban design is not just about buildings or aesthetics, but about structuring environments that enhance human well-being and cognition. This approach asserts that every design decision should reflect how people think and feel about their environment, making human behavior and perceptual patterns central to good urban design.
+:::
+
+::: column
+The concept of "place" is among the most pivotal in urban design theory. @sepe2014place examine this idea in detail in their paper on the characters of place. They argue that "place" in urban contexts is both a material and symbolic concept. It encompasses environmental, historical, psychological, and sociological dimensions. Places are not just physical locations; they are embedded with meanings, memories, and identity markers. The authors emphasize the porous and resistant nature of place—it receives influences and interactions while also holding unique characteristics that resist homogenization. Importantly, place identity is not about uniformity but uniqueness and individuality, marking it as a core value in place-making strategies.
+
+@urban2023cities highlights the disciplinary convergence that defines contemporary urban design. By bringing together contributions from archaeology, health, transport, and climate studies, the volume underscores the necessity of interdisciplinary thinking. It demonstrates how urban design is influenced by and influences factors such as historical memory, health equity, and climate resilience. The contributors argue that designing cities requires an understanding of their temporal evolution and future trajectories. In this view, urban design becomes an interface between history, policy, and innovation, making it essential for addressing modern challenges such as aging populations and environmental stress.
+:::
+:::::
+
+In addressing the operational systems behind urban life, @maghraoui2017mobility focus on urban mobility as a representative challenge of urban design. Their work argues that urban mobility should be seen not as a set of disconnected elements—vehicles, roads, services—but as a unified user experience. They propose reframing mobility through the lens of human-centered design, where every element supports a cohesive journey experience. This systems-based thinking is fundamental in designing livable cities that are responsive to human needs and sustainable operations.
+
+![](https://cdn.pixabay.com/photo/2023/01/21/22/33/hamburg-7735229_1280.jpg)
 
 ### Contemporary Approaches
 
-Modern urban design theories address current challenges and aspirations:
+Contemporary urban design scholarship increasingly emphasizes the interrelation between space, society, and power. Lorzangeneh builds upon Alexander Cuthbert’s "spatial political economy" to argue that urban design should not merely borrow frameworks from allied fields but establish itself through a dialectical process that integrates theory and place-making practice [@alexander1977]. @harfield2010social, similarly, highlights urban design as a medium for social benefit, critiquing its overemphasis on physicality and formal aesthetics. He calls for an orientation toward inclusivity, infrastructure, sustainability, and cohesion, asserting that urban design outcomes should tangibly benefit communities beyond their visual or economic value.
 
--   **New Urbanism** promotes walkable neighborhoods, mixed-use development, and traditional architectural styles [@duany2000].
+Derya Oktay's critical review highlights the blurred boundaries and conceptual ambiguities that continue to challenge urban design [@oktay2016critical]. She emphasizes that urban design today must transition from being a form-centric enterprise to an interdisciplinary and place-oriented approach. Oktay critiques how the disjunction between "urban" and "design" limits the field’s potential to respond to sustainability and social equity. Her work advocates for rethinking urban design’s role, scale, and interdisciplinary practices in shaping resilient, equitable cities. @lima2015digital explore a crucial contemporary shift: the integration of digital processes in urban design. Their study outlines how parametric design systems, which focus on the parameters generating urban forms rather than the forms themselves, are revolutionizing urban planning. These systems enable dynamic modifications throughout the design process, enhancing adaptability and coherence in urban interventions. The paper presents real-world cases demonstrating how this methodology augments flexibility and control at an urban scale, although it also warns against the risk of over-dependence on technological abstraction.
 
--   **Landscape Urbanism** views landscape as the primary framework for urban development, emphasizing ecological processes and the integration of natural systems [@waldheim2006].
+A comprehensive dissertation on the disconnect between traditional design theories and the contemporary needs of sustainability was published by @shahreen2012sustainability. Through the case study of Liverpool, @shahreen2012sustainability explores how urban regeneration practices are adjusting to climate, economic, and social imperatives. They identify the failures of conventional models and illustrates how collaborative, policy-driven, and context-aware design practices can achieve more effective and inclusive sustainable development. Her research showes how sustainable urbanism must be embedded within governance, land use planning, and community engagement strategies.
 
--   **Everyday Urbanism** focuses on the informal, often overlooked aspects of urban life, highlighting the significance of daily practices and user-generated spaces [@crawford2008].
+## Urban Design, Power and Michel Foucault
 
--   **Tactical Urbanism** involves temporary, low-cost interventions aimed at improving urban spaces and fostering community engagement [@lydon2015].
+Michel Foucault’s work reveals power not as something held but as a relational and productive force that structures social realities. Urban design, when seen through this lens, becomes a political technology—a spatial expression of governmental rationalities. Foucault shifted focus from sovereign power to disciplinary and bio-political mechanisms, arguing that modern power develops diffuse, often invisible networks through institutions, norms, and spaces. Cities, with their zoning, surveillance, and infrastructure, materialize these mechanisms.
 
--   **Sustainable Urbanism** integrates environmental considerations into urban planning, aiming for resource efficiency and reduced ecological footprints [@farr2008].
+@kirsanova2024space argues that space is central to Foucault’s theory of power, where spatial arrangements are not neutral but structured to enable control, supervision, and discipline. She highlights that spatial organization becomes a platform where social hierarchies are visualized and enacted. Foucault’s disciplinary mechanisms—such as visibility, surveillance, and enclosure—rely on spatial structuring, as seen in prisons, hospitals, and urban grids. This spatiality of power allows authority to act through architecture, turning the city into a network of normative orders. @barros2023urbano extends this to biopolitics, illustrating how urban spaces are shaped by state rationalities that manage populations through segregation and infrastructural inequalities. His study shows that modern cities are shaped by rationalities that govern through spatial distribution, exclusion, and racialized state control. The city becomes a site of bio-governance, where population control is achieved not just through laws but through uneven development, access to resources, and spatial stratification.
 
-> "Sustainable urbanism seeks to create environments that are not only livable but also resilient and environmentally responsible." [@farr2008]
+Gordana Fontana-Giusti explores how Foucault’s concepts of enclosure, discipline, and aesthetics have reshaped architectural thinking [@fontanagiusti2013foucault]. Her book presents architecture as a material articulation of power that shapes not only the use of space but also the conduct of its users. Drawing on themes like the panopticon, spatial ordering, and institutional architecture, she shows that design decisions are deeply political acts—structuring bodies, behaviors, and subjectivities within normative spatial logics. @sanli2024ideological applies Foucault's framework of governmentality to comparative urban analysis in Berlin and Ankara. They trace how state ideologies are manifested in urban morphology—from monumental public architecture to zoning laws and symbolic design. Using Lefebvre’s and Dovey’s interpretations alongside Foucault, they reveal that cities do not merely reflect but actively constitute political ideologies, embedding historical narratives and power shifts into their spatial fabric.
 
-### Ecological and Resilient Design
+# Methodology
 
-The increasing awareness of environmental issues has led to a focus on ecological urban planning. This approach emphasizes the integration of natural systems, biodiversity, and resilience into urban development. Key themes include ecosystem services, green infrastructure, and socio-ecological systems [@revi2019].
+::::: columns
+::: column
+This study applies a spatially explicit methodology to evaluate the urban capabilities of Hamburg, integrating multi-source data and geospatial processing in R. The objective is to quantify and visualize urban attractivity and accessibility using reproducible and interpretable spatial techniques.
 
-> "Ecological urban planning integrates natural processes into the urban fabric, promoting sustainability and resilience." [@revi2019]
+The analysis begins by defining the area of interest around central Hamburg. This area is projected into the UTM Zone 32N coordinate reference system to ensure spatial measurements in meters. A hexagonal grid with cells of approximately 1,000 square meters is constructed, enabling consistent spatial aggregation across the city. This grid acts as the analytical backbone for the attractivity index and ensures comparability across all subsequent metrics.
 
-### Principles of Intelligent Urbanism
+``` r
+library(sf)
+aoi_bbox <- c(xmin = 9.626770, ymin = 53.383328, xmax = 10.351868, ymax = 53.748711)
+aoi <- st_as_sfc(st_bbox(aoi_bbox), crs = 4326)
+aoi_proj <- st_transform(aoi, 32632)
+hex_grid <- st_make_grid(aoi_proj, cellsize = 1000, square = FALSE)
+hex_sf <- st_sf(geometry = hex_grid)
+```
+:::
 
-Christopher Charles Benninger's "Principles of Intelligent Urbanism" outlines ten axioms for sustainable and equitable urban development. These principles advocate for environmental sustainability, social equity, and cultural sensitivity in urban planning [@benninger2001].
+::: column
+To populate each hexagon with relevant urban information, OpenStreetMap (OSM) is queried for a wide array of features. These include parks and green spaces, bars, restaurants, leisure infrastructure, subway and bus stations, and the Hamburg Hauptbahnhof. The proximity to these features and their densities within each hexagon form the foundational variables for assessing attractivity. Spatial joins and distance calculations are performed using the `sf`, `osmdata`, and `dplyr` packages in R.
 
-> "Intelligent urbanism is guided by principles that ensure cities are livable, equitable, and sustainable." [@benninger2001]
-
-Urban design continues to evolve, incorporating diverse perspectives and addressing complex challenges. By understanding its theoretical foundations and contemporary approaches, practitioners can create urban environments that are functional, sustainable, and responsive to the needs of their inhabitants.
-
-## 🔬 Methodology
-
-This methodology outlines the process of evaluating Hamburg's urban capabilities using spatial data, geospatial analysis, and interactive visualization techniques. The goal was to quantify urban attractivity and transit accessibility through a reproducible workflow based in R.
-
-### 📦 Data Sources
-
-We used a combination of open spatial data and transit schedules to form the basis of our analysis:
-
--   **OpenStreetMap (OSM):** Leveraged via the `osmdata` R package to obtain geospatial data on amenities, parks, transport stations, and infrastructure.
-
-    **GTFS Data:** General Transit Feed Specification files from HVV (Hamburg public transport authority), used to assess transit service frequency.
-
--   **Administrative Boundaries:** Queried from OSM to enable spatial aggregation by districts.
-
-All spatial data was reprojected to UTM Zone 32N (EPSG:32632) to ensure metric accuracy.
-
-### 🌍 Spatial Framework and Area of Interest
-
-We defined the area of interest (AOI) using a bounding box centered on the main urban area of Hamburg:
-
-```         
-bbox <- c(xmin = 9.626770, ymin = 53.383328, xmax = 10.351868, ymax = 53.748711) aoi <- st_as_sfc(st_bbox(bbox), crs = 4326) aoi_proj <- st_transform(aoi, 32632) 
+``` r
+library(osmdata)
+osm_query <- opq(bbox = aoi_bbox) %>%
+  add_osm_feature(key = "amenity", value = c("bar", "restaurant"))
+bars_restaurants <- osm_query %>% osmdata_sf()
+bars_sf <- bars_restaurants$osm_points %>% st_transform(32632)
 ```
 
-A **hexagonal grid** of \~1 km cell size was overlaid on the projected AOI to provide a consistent unit of analysis:
+The attractivity index is then calculated for each hexagon by normalizing all relevant features using min-max scaling. For distance metrics, values are inverted so that proximity contributes positively to the index. Each component is assigned a weight, and the weighted components are aggregated to yield a final attractivity score between 0 and 1. These weights are customizable and documented transparently in the code, enabling alternative index constructions based on different policy priorities.
+:::
+:::::
 
-```         
-hex_grid <- st_make_grid(aoi_proj, cellsize = 1000, square = FALSE) hex_sf <- st_sf(geometry = hex_grid) 
+``` r
+normalize <- function(x) (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
+hex_sf$bar_score <- normalize(hex_sf$bar_count)
+hex_sf$park_score <- 1 - normalize(hex_sf$dist_park_m)
+hex_sf$attractivity_index <- 0.15 * hex_sf$bar_score + 0.15 * hex_sf$park_score + ...
 ```
 
-This approach allows aggregation and comparison across evenly distributed spatial units.
+In parallel, public transport accessibility is analyzed using General Transit Feed Specification (GTFS) data provided by Hamburg's transit authority (HVV). This data is parsed to extract all stops and their departure frequencies during peak morning hours (7:00–9:00). Stops with at least six departures per hour are classified as high-frequency. Buffers of 400 meters are generated around these stops to create service areas that represent convenient walking access to frequent transit.
 
-### 🌿 OSM Feature Extraction
-
-Using `osmdata`, we queried various features relevant to urban attractivity:
-
--    **Parks and Green Spaces:** Tags such as `leisure=park`, `natural=wood`, `landuse=recreation_ground`.
-
--   **Hamburg Hauptbahnhof:** Queried explicitly by name and function (`railway=station`).
-
--   **Leisure and Amenity POIs:** Including `amenity=bar`, `amenity=restaurant`, `leisure=*`.
-
--   **Transport Stops:** `highway=bus_stop` and `station=subway`.
-
-All features were filtered, validated, and transformed to the target CRS.
-
-### 📊 Metrics per Hexagon
-
-We computed two types of metrics for each hexagon:
-
-#### 1. **Proximity Metrics**
-
--    Distance to the nearest park and Hamburg Hbf.
-
--   Calculated using `st_distance()` on centroid coordinates.
-
-```         
-hex_centroids <- st_centroid(hex_sf) hex_sf$dist_park_m <- st_distance(hex_centroids, parks_union_proj)[, 1] 
+``` r
+library(tidytransit)
+gtfs <- read_gtfs("Data/hvv_gtfs.zip")
+stop_freq <- get_stop_frequency(gtfs, start_time = "07:00:00", end_time = "09:00:00")
+high_freq_stops <- stop_freq %>% filter(departures_per_hr >= 6)
+service_area <- st_buffer(high_freq_stops_sf, dist = 400) %>% st_union()
 ```
 
-#### 2. **Density Metrics**
+District-level spatial joins are used to assess how much of each administrative district falls within this well-serviced buffer. Metrics such as the total covered area, average frequency, and percentage coverage are calculated and used to evaluate equity in transit provision across Hamburg. The integration of these GTFS-based accessibility zones with attractivity scoring provides a dual-layered understanding of urban opportunity.
 
--   Count of POIs (bars, restaurants, leisure, stops) within each hexagon.
+Additionally, walking isochrones are calculated from key transit hubs such as Hamburg Hauptbahnhof and Jungfernstieg. These isochrones define the area reachable by foot in 5, 10, and 15 minutes, based on average pedestrian speeds. By analyzing the average and maximum distances achieved within each time interval, the study gains insights into the spatial structure of walkability around key nodes.
 
--   Implemented using `st_join()` and aggregated with `dplyr::count()`.
-
-```         
-bars_in_hex <- st_join(bars_proj, hex_sf, join = st_within) bar_counts <- bars_in_hex %>% count(hex_id) 
+``` r
+library(sf)
+walking_speeds <- c(5, 10, 15) # in minutes
+iso_distances <- walking_speeds * 1.2 * 60 # approx. meters/minute
+isochrones <- lapply(iso_distances, function(dist) st_buffer(hub_point_proj, dist))
 ```
 
-### 📈 Attractivity Index Calculation
+The outputs of these analyses are visualized using interactive `leaflet` maps. These include a choropleth map of the attractivity index, district coverage maps of public transport access, and overlay maps combining walkability and transit buffers. Each map is enriched with popups and legends that explain the underlying data and methods.
 
-Each metric was normalized (min-max) and aggregated into a composite score with weighted contributions. Distance metrics were inverted so that higher values reflect closer proximity.
+In summary, this methodology blends land-use, pedestrian accessibility, and transit performance into a unified spatial framework. Through its combination of hexagonal grid analytics, isochrone modeling, and GTFS-based service profiling, it provides a multi-dimensional view of how Hamburg performs in terms of urban form and access. The approach is designed to be flexible, extensible, and directly informative for planners, policymakers, and engaged residents alike.
 
-```         
-normalize <- function(x) (x - min(x)) / (max(x) - min(x)) hex_sf <- hex_sf %>% mutate(   bar_score = normalize(bar_count),   park_score = 1 - normalize(dist_park_m),   attractivity_index = 0.15 * bar_score + 0.15 * park_score + ... ) 
+![](https://cdn.pixabay.com/photo/2023/11/04/07/26/house-8364394_1280.jpg)
+
+# Analysis
+
+```{=html}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamburg Infographic - Neo-Brutalist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Jost:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use Jost font for body text */
+        body {
+            font-family: 'Jost', sans-serif;
+            /* Set background to transparent */
+            background-color: transparent;
+            color: #111827; /* Darker text for contrast */
+        }
+
+        /* Use Bebas Neue for titles */
+        h1, h2, .header-title {
+             font-family: 'Bebas Neue', sans-serif;
+             letter-spacing: 0.05em; /* Add slight letter spacing for Bebas Neue */
+        }
+
+        /* Neo-Brutalist Card Style */
+        .infographic-card {
+            background-color: white;
+            border: 2px solid #111827; /* Thick black border */
+            box-shadow: 4px 4px 0px #111827; /* Hard shadow effect */
+            border-radius: 0; /* Sharp edges */
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Simple transition */
+            padding: 1.5rem; /* p-6 */
+        }
+
+        /* Hover effect for cards */
+        .infographic-card:hover {
+            transform: translate(-2px, -2px); /* Slight shift on hover */
+            box-shadow: 6px 6px 0px #005c99; /* Shifted shadow with accent color */
+        }
+
+        /* Icon style - use black for stark contrast */
+        .icon-style {
+            color: #111827;
+        }
+
+        /* Header styling */
+        .header-title {
+            font-weight: 400; /* Bebas Neue is inherently bold */
+            color: #111827;
+        }
+        .header-subtitle {
+            color: #4b5563; /* Slightly lighter gray */
+            font-family: 'Jost', sans-serif; /* Ensure subtitle uses Jost */
+        }
+
+        /* Specific card background colors - use bolder, solid colors */
+        .card-bg-blue {
+             background-color: #a7d8ff; /* Brighter blue */
+             border-color: #005c99; /* Darker blue border */
+             box-shadow: 4px 4px 0px #005c99;
+        }
+        .card-bg-green {
+             background-color: #a7f3d0; /* Brighter green */
+             border-color: #047857; /* Darker green border */
+             box-shadow: 4px 4px 0px #047857;
+        }
+        .card-bg-blue:hover {
+            box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+        .card-bg-green:hover {
+             box-shadow: 6px 6px 0px #111827; /* Black shadow on hover */
+        }
+
+        /* Bold text for key numbers (using Jost Bold) */
+        .key-number {
+            font-weight: 700; /* Use Jost Bold */
+            color: #111827; /* Black for high contrast */
+            font-family: 'Jost', sans-serif; /* Ensure key numbers use Jost */
+        }
+
+        /* Ensure links/buttons (if any) have a similar style */
+        .neo-button {
+            display: inline-block;
+            background-color: #eab308; /* Example: Yellow */
+            color: #111827;
+            border: 2px solid #111827;
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            font-weight: 600; /* Use Jost SemiBold/Bold */
+            box-shadow: 2px 2px 0px #111827;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-family: 'Jost', sans-serif; /* Ensure buttons use Jost */
+        }
+        .neo-button:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 3px 3px 0px #111827;
+        }
+
+        /* Explicitly set font for list items and paragraphs if needed */
+        ul, p, li div {
+             font-family: 'Jost', sans-serif;
+        }
+        /* Adjust font weight for specific elements if needed */
+         h3 {
+            font-weight: 700; /* Jost Bold for sub-landmarks */
+            font-family: 'Jost', sans-serif;
+         }
+         strong {
+             font-weight: 700; /* Jost Bold */
+         }
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-6xl mx-auto">
+
+        <header class="text-center mb-10 sm:mb-16">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl header-title mb-2">
+                <i class="fas fa-anchor icon-style mr-2"></i>Discover Hamburg
+            </h1>
+            <p class="text-lg sm:text-xl header-subtitle">The Gateway to the World</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+
+            <div class="infographic-card">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-city icon-style mr-3 text-2xl"></i>Key Facts
+                </h2>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start"><i class="fas fa-users w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Population:</strong> ~1.9 million</div></li>
+                    <li class="flex items-start"><i class="fas fa-map-marked-alt w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Area:</strong> 755 km² (292 sq mi)</div></li>
+                    <li class="flex items-start"><i class="fas fa-water w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>State:</strong> City-state (Stadtstaat)</div></li>
+                     <li class="flex items-start"><i class="fas fa-globe-europe w-5 text-center mr-2 mt-1 icon-style"></i><div><strong>Country:</strong> Germany</div></li>
+                </ul>
+            </div>
+
+            <div class="infographic-card card-bg-blue">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-bridge icon-style mr-3 text-2xl"></i>City of Bridges
+                </h2>
+                <div class="text-center">
+                     <div class="text-6xl key-number mb-2">~2,500</div>
+                     <p class="text-gray-700">More bridges than Amsterdam, Venice, and London combined!</p>
+                </div>
+            </div>
+
+            <div class="infographic-card card-bg-green">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-leaf icon-style mr-3 text-2xl"></i>Green Metropolis
+                </h2>
+                <div class="text-center">
+                    <div class="text-6xl key-number mb-2">~14%</div>
+                    <p class="text-gray-700">Of the city area consists of green spaces and recreational areas.</p>
+                </div>
+            </div>
+
+            <div class="infographic-card md:col-span-2 lg:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-ship icon-style mr-3 text-2xl"></i>Port of Hamburg
+                </h2>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start"><i class="fas fa-anchor w-5 text-center mr-2 mt-1 icon-style"></i><div>Germany's largest seaport.</div></li>
+                    <li class="flex items-start"><i class="fas fa-trophy w-5 text-center mr-2 mt-1 icon-style"></i><div>3rd busiest port in Europe.</div></li>
+                    <li class="flex items-start"><i class="fas fa-landmark w-5 text-center mr-2 mt-1 icon-style"></i><div>A major tourist attraction with boat tours.</div></li>
+                </ul>
+            </div>
+
+            <div class="infographic-card lg:col-span-2">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-landmark icon-style mr-3 text-2xl"></i>Must-See Landmarks
+                </h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-700">
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Elbphilharmonie</h3>
+                        <p>Stunning concert hall with panoramic views.</p>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Speicherstadt</h3>
+                        <p>Largest warehouse district built on oak piles (UNESCO World Heritage).</p>
+                    </div>
+                    <div>
+                        <h3 class="mb-1 text-gray-800">Miniatur Wunderland</h3>
+                        <p>World's largest model railway exhibition.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">St. Michael's Church</h3>
+                        <p>Iconic baroque church ("Michel") with a famous tower.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">Reeperbahn</h3>
+                        <p>Famous entertainment and nightlife district in St. Pauli.</p>
+                    </div>
+                     <div>
+                        <h3 class="mb-1 text-gray-800">Planten un Blomen</h3>
+                        <p>Large urban park with botanical gardens and water light concerts.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer class="text-center mt-10 sm:mt-16 text-gray-600 text-sm">
+            Infographic created with HTML & Tailwind CSS - Neo-Brutalist Style
+        </footer>
+
+    </div>
+
+</body>
+</html>
 ```
 
-Weights were chosen based on assumed user preferences but can be customized in the script.
+This section presents the analytical outcomes of the Hamburg urban capabilities assessment, based on spatial data, hexagonal attractivity indexing, and GTFS-derived public transit accessibility. The goal is to interpret the significance of the summarized metrics and evaluate how various urban components interact spatially across the city.
 
-### 🚌 Transit Frequency and Accessibility
+## Urban Attractivity Patterns Across Hamburg
 
-To assess mobility, we parsed HVV GTFS data with `tidytransit` and calculated:
+::::: columns
+::: column
+Using a consistent spatial framework consisting of 1,312 hexagonal grid cells, we quantified and visualized the relative attractivity of urban space in Hamburg. Each hexagon was scored based on a composite index that factored in proximity to parks and the main train station, as well as densities of restaurants, bars, leisure sites, bus stops, and subway stations. The data used for these inputs were retrieved from OpenStreetMap and processed into spatial features.
+:::
 
--    **Peak-hour frequency:** Number of departures per stop between 7:00 and 9:00.
+::: column
+The results highlight that central boroughs such as Hamburg-Mitte, Altona, and Eimsbüttel contain clusters of hexagons with the highest attractivity scores. These areas benefit from short walking distances to green spaces and transport hubs, along with a high concentration of social and leisure infrastructure. The attractivity index ranged approximately between 0 and 1, with upper-quartile cells often achieving values above 0.75, particularly around central transport nodes and waterfront neighborhoods.
+:::
+:::::
 
--    **High-frequency classification:** Stops with ≥6 departures/hour.
-
--   **Service coverage:** Area within 400m of high-frequency stops, clipped to the AOI.
-
-```         
-high_freq_stops <- stop_freq %>% filter(departures_per_hr >= 6) service_area <- st_buffer(high_freq_stops_proj, 400) %>% st_union() 
+```{=html}
+<iframe
+  id="inlineFrameExample"
+  title="Inline Frame Example"
+  width="1200"
+  height="1000"
+  src="Widgets/viz_map_index.html">
+</iframe>
 ```
 
-### 🌎 District-Level Aggregation
+A choropleth map depicting attractivity index scores across the hex grid enables a straightforward interpretation of these spatial dynamics. Additional plots, such as a histogram showing the distribution of scores and a tabular summary of the top 10 hexagons by index value, can help identify priority locations for urban investment or conservation.
 
-To support interpretation by policymakers, we joined calculated metrics to administrative districts:
+## Public Transit Accessibility and Spatial Coverage
 
--   **Proportions:** % of area covered by public transport or green space buffers.
+The GTFS analysis focused on service frequency between 07:00 and 09:00, representing peak commuting hours. A threshold of six departures per hour was used to classify stops as high-frequency. The dataset included 7,122 stops operating within the defined BBOX, out of which 1,798 met the high-frequency criterion.
 
--   **Densities:** POIs, stops, buildings per km².
+To assess spatial accessibility, 400-meter buffers were generated around each high-frequency stop. These buffers were merged and clipped to the analysis boundary. The result was a contiguous area of approximately 146 km², which reflects well-serviced zones with convenient access to public transport during peak hours.
 
--   **Ratios:** e.g., cycleway-to-road network length.
+An analysis of district-level coverage indicated that inner-city areas, including Hamburg-Mitte and Eimsbüttel, had greater than 80% coverage within the clipped buffer area. In contrast, outer districts such as Harburg and Bergedorf had significantly lower coverage, often falling below 50%. These disparities underscore a spatial mismatch between transit service levels and urban expansion, suggesting the need for targeted mobility improvements in peripheral neighborhoods.
 
-```         
-district_measures <- districts %>%   left_join(aggregated_counts) %>%   mutate(road_density_km_km2 = road_length / area_km2) 
+```{=html}
+<iframe
+  id="inlineFrameExample"
+  title="Inline Frame Example"
+  width="1200"
+  height="1000"
+  src="Widgets/pt_map_filtered_clipped_straightforward.html">
+</iframe>
 ```
 
-### 🎭 Interactive Visualization
+Visualizing district-level coverage as a choropleth, paired with a numeric summary table, allows for rapid comparison across jurisdictions. This analysis can inform transport equity audits and infrastructure planning.
 
-We used the `leaflet` package to display:
+## Walking Isochrone Accessibility from Transit Hubs
 
--    **Choropleth map** of attractivity index.
+::::: columns
+::: column
+To evaluate last-mile accessibility and pedestrian reach, we computed walking isochrones from major transport hubs, including Hamburg Hauptbahnhof and Jungfernstieg. Isochrones were generated for 5-, 10-, and 15-minute intervals, using average pedestrian speed assumptions.
 
--   **Toggleable layers** for transit stops, service buffers, and coverage statistics.
+The analysis shows that in a 5-minute walk, individuals can access an average distance of approximately 185 meters. This increases to around 460 meters for 10 minutes and nearly 700 meters for 15 minutes. Maximum walking distances within these intervals reach up to 950 meters in favorable conditions. These values were consistent across hubs, indicating a generally compact and walkable core area in central Hamburg.
 
--   **On-map explanations** with weighted metric breakdowns.
+These results tie into the broader concept of **walkability**, which refers to how conducive an environment is to walking. Key elements include the presence and connectivity of sidewalks, pedestrian-friendly infrastructure, proximity to key services and amenities, and safety. In our case, walkability is measured both by the spatial distribution of amenities within close walking distances and the temporal reach from transport nodes. The isochrone maps demonstrate how far an average pedestrian can move within a given time frame, while the attractivity index integrates this with destination density.
+:::
 
-```         
-leaflet(hex_sf) %>%   addPolygons(fillColor = ~pal_index(attractivity_index), ...) 
+::: column
+Thus, the combination of hexagon-level amenity scoring and radial isochrones enables us to understand walkability both from a network accessibility and land-use intensity perspective. The areas with high overlap between high attractivity and broad walkable reach from major hubs reflect superior pedestrian-oriented planning. In contrast, hexagons with fewer reachable destinations or isolated amenities highlight potential urban gaps.
+
+Importantly, walkability does not exist in isolation but is deeply augmented by access to high-frequency public transport. When pedestrians are within short walking distance of transit nodes offering regular service, the effective reach of their movement across the city multiplies. This co-location of high attractivity and transit access enables a synergistic model of mobility—walkable streets feed into an efficient transit network, allowing individuals to easily transition from short walks to rapid travel over longer distances.
+
+This integration creates a layered mobility environment, often referred to as the "walk-and-ride" dynamic, in which urban areas combine the advantages of compact pedestrian districts with the time-efficiency of public transport. In the case of Hamburg, zones such as Hauptbahnhof and Jungfernstieg illustrate this concept well. These hubs not only provide the geographic core of the network but also maximize access to a diversity of amenities within both walking and transit-enabled isochrones. The outcome is a kind of urban permeability that enhances both equity and sustainability.
+:::
+:::::
+
+```{=html}
+<iframe
+  id="inlineFrameExample"
+  title="Inline Frame Example"
+  width="1200"
+  height="1000"
+  src="Widgets/Walkability.html">
+</iframe>
 ```
 
-Results are presented through a user-friendly map interface, allowing for hover and click interactions with each hexagon.
+Expanding this model beyond the city center—by improving service frequency in underserved neighborhoods or introducing complementary pedestrian infrastructure—can elevate walkability standards citywide. This also helps reduce dependency on cars, supports active travel, and makes the urban environment more inclusive, particularly for those without access to private vehicles.
 
-This methodology combines geospatial analysis, open data, and reproducible R workflows to assess urban attractivity and transit accessibility in Hamburg. By structuring the city into hexagonal units, we enable precise, scalable, and interpretable spatial evaluations suitable for planning and policy discussions.
+## Integrated Analysis of Urban Quality and Mobility
+
+By combining attractivity scores with transit accessibility, a more nuanced view of Hamburg’s urban fabric emerges. Areas that score highly on both dimensions—such as the city center and parts of Altona—represent well-functioning, accessible, and vibrant urban spaces. These zones can serve as exemplars for integrated urban design and policy.
+
+However, some areas with mid-to-high attractivity scores are underserved by frequent transit. These may be undergoing recent development or may suffer from historical underinvestment. Identifying and prioritizing these spatial gaps is crucial for equitable city planning.
+
+Cross-referencing hexagon scores and buffer zones in a spatial overlay or categorical heatmap can visually highlight these disparities. Additionally, plotting index distributions inside versus outside the serviced buffer area can quantify how transport infrastructure influences overall urban quality.
+
+The findings of this analysis point to several key areas for action. Firstly, high-attractivity zones should be preserved and enhanced through planning measures that limit overdevelopment while supporting quality of life. Secondly, transit service upgrades should focus on districts with relatively poor buffer coverage and rising land-use intensity. Thirdly, integrating walkability assessments with transport access can help optimize the placement of new services and ensure equitable access.
+
+Ultimately, the hex-based spatial approach presented here offers a flexible and data-rich foundation for urban diagnostics, investment prioritization, and long-term monitoring of city performance.
+
+![](https://cdn.pixabay.com/photo/2018/07/06/22/56/skyscraper-3521328_1280.jpg)
