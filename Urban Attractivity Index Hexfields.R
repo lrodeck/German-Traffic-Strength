@@ -717,8 +717,7 @@ call_gemini_analysis <- function(prompt) {
   # The API key should be set via Sys.setenv or gemini_init before this function is called.
   response <- tryCatch({
     gemini(
-      prompt = prompt,
-      model = "2.0-flash-lite"
+      prompt = prompt
     )
   }, error = function(e) {
     message("Gemini API call failed: ", e$message)
@@ -776,19 +775,6 @@ print("Finished AI analysis for all hexagons using geminiR.")
 # st_write(hex_grid_hamburg, "hex_grid_hamburg_with_analysis.gpkg", append = FALSE)
 
 
-# Get the data for the current hexagon
-current_hex_data <- hex_grid_hamburg%>%
-  filter(!is.na(district_name))
-
-current_hex_data[1, ]
-
-# Construct the prompt
-prompt <- construct_ai_prompt(current_hex_data)
-# print(paste("Prompt for hexagon", i, ":", prompt)) # Optional: Print prompt for debugging
-
-# Call Gemini using the geminiR package
-analysis <- call_gemini_analysis(prompt)
-
 
 
 # --- 7. Visualization (Updated for Index) ----
@@ -815,10 +801,9 @@ neo_brutalist_colors <- c("#FF4911", "#9723c9", "#69D2E7", "#2FFF2F")
 n_color_bins <- 4 # Results in 4 distinct colors for 4 quantiles
 
 # Use colorQuantile to create discrete color steps based on data distribution
-pal_index <- colorQuantile(
+pal_index <- colorNumeric(
   palette = neo_brutalist_colors,
   domain = hex_grid_viz$attractivity_index,
-  n = n_color_bins,         # Number of quantiles/bins
   na.color = "#bdbdbd"      # Color for NA values
 )
 
@@ -834,14 +819,15 @@ popup_content <- paste0(
     font-family: Jost, sans-serif;
     font-size: 13px;
     line-height: 1.4;
-    max-width: 260px;
+    max-width: 270px;
+    max-height: 200px;
+    overflow-y: scroll;
   '>",
   "<div style='
     font-family: \"Bebas Neue\", sans-serif;
     font-size: 18px;
     margin-bottom: 6px;
     letter-spacing: 0.5px;
-    overflow: scroll;
   '><b>Hex ID: ", htmltools::htmlEscape(hex_grid_viz$hex_id), "</b></div>",
   # Add District Name if available
   ifelse(!is.na(hex_grid_viz$district_name), paste0("<div><b>District:</b> ", htmltools::htmlEscape(hex_grid_viz$district_name), "</div>"), ""),
@@ -887,7 +873,7 @@ explanation_html <- paste0(
     line-height: 1.4;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     max-width: 270px;
-    overflow: scroll;
+    overflow: auto;
   '>",
   "<div style='
     font-family: \"Bebas Neue\", sans-serif;
@@ -897,17 +883,23 @@ explanation_html <- paste0(
   "<hr style='margin: 8px 0;'>",
   "<p style='margin: 0;'>Index (0–1) based on weighted, normalized metrics:</p>",
   "<ul style='margin: 6px 0 8px 16px; padding-left: 0;'>",
-  "<li>Proximity to Parks (", weights$park_dist * 100, "%)</li>",
-  "<li>Proximity to Hbf (", weights$hbf_dist * 100, "%)</li>",
-  "<li>Bars/Pubs (", weights$bars * 100, "%)</li>",
-  "<li>Restaurants (", weights$restaurants * 100, "%)</li>",
-  "<li>Other Leisure (", weights$leisure * 100, "%)</li>",
-  "<li>Bus Stops (", weights$bus_stops * 100, "%)</li>",
-  "<li>U-Bahn Stations (", weights$subway_stations * 100, "%)</li>",
+  "<li>Proximity to Parks (", round(weights$park_dist * 100, 1), "%)</li>",
+  "<li>Proximity to Hbf (", round(weights$hbf_dist * 100, 1), "%)</li>",
+  "<li>Bars/Pubs (", round(weights$bars * 100, 1), "%)</li>",
+  "<li>Restaurants (", round(weights$restaurants * 100, 1), "%)</li>",
+  "<li>Leisure & Culture (", round((weights$leisure + weights$museums + weights$cinemas) * 100, 1), "%)</li>",
+  "<li>Bus Stops (", round(weights$bus_stops * 100, 1), "%)</li>",
+  "<li>U-Bahn Stations (", round(weights$subway_stations * 100, 1), "%)</li>",
+  "<li>Educational Facilities (", round((weights$schools + weights$kindergartens) * 100, 1), "%)</li>",
+  "<li>Everyday Amenities (", round((weights$supermarkets + weights$cafes) * 100, 1), "%)</li>",
+  "<li>Healthcare Facilities (", round((weights$doctors + weights$hospitals) * 100, 1), "%)</li>",
+  "<li>Sports Centres (", round(weights$sports_centres * 100, 1), "%)</li>",
+  "<li>Libraries (", round(weights$libraries * 100, 1), "%)</li>",
   "</ul>",
   "<p style='font-size: 11px; margin-top: 6px; color: #444;'>Higher index = more attractive. Proximity scores are inverted: closer = higher.</p>",
   "</div>"
 )
+
 
 
 
@@ -959,7 +951,7 @@ viz_map_index <- leaflet(data = hex_grid_viz, options = leafletOptions(preferCan
 
 # Print the map
 print(viz_map_index)
-saveWidget(viz_map_index, file = "Widgets/viz_map_index.html", selfcontained = TRUE)
+htmlwidgets::saveWidget(viz_map_index, file = "Widgets/viz_map_index.html", selfcontained = TRUE)
 
 
 print("--- Script finished ---")
