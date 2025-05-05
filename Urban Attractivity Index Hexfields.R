@@ -1,14 +1,15 @@
 # --- 1. Install and Load Necessary Packages----
-# install.packages(c("sf", "osmdata", "dplyr", "leaflet", "units", "lwgeom"))
-library(sf)          # Spatial data handling
-library(osmdata)     # OpenStreetMap data querying
-library(dplyr)       # Data manipulation
-library(leaflet)     # Interactive maps
-library(units)       # Handling distance/area units
-library(lwgeom)      # For st_make_valid if needed
-library(tidyverse)
+# install.packages(c("sf", "osmdata", "dplyr", "leaflet", "units", "lwgeom", "tidyverse", "geminiR"))
+library(sf) # Spatial data handling
+library(osmdata) # OpenStreetMap data querying
+library(dplyr) # Data manipulation
+library(leaflet) # Interactive maps
+library(units) # Handling distance/area units
+library(lwgeom) # For st_make_valid if needed
+library(tidyverse) # Data manipulation and piping
+library(geminiR) # For calling the Gemini API
 
-extrafont::loadfonts()
+extrafont::loadfonts() # Assuming extrafont is installed for custom fonts
 
 # --- 2. Define Area of Interest (AOI) and Parameters----
 aoi_name <- "Hamburg Germany"
@@ -26,13 +27,10 @@ hamburg_boundary_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>
   add_osm_feature(key = "admin_level", value = "4") %>%
   osmdata_sf()
 
-
-
-# Assumes multipolygons are returned and selects the first one
+# Assumes multipolygons are returned and selects the first one named "Hamburg" with border_type "state"
 hamburg_boundary_sf <- hamburg_boundary_osm$osm_multipolygons %>%
   filter(name == "Hamburg" & border_type == "state")%>%
   st_make_valid()
-
 
 # Project the boundary
 hamburg_boundary_proj <- st_transform(hamburg_boundary_sf, target_crs)
@@ -54,9 +52,16 @@ parks_sf <- parks_osm$osm_polygons %>%
   filter(!sf::st_is_empty(.)) %>% # Keep basic empty check
   st_make_valid()
 
-parks_proj <- st_transform(parks_sf, target_crs)
-parks_union_proj <- st_union(parks_proj) # Assumes parks_proj is not empty
-print(paste("Found and combined", nrow(parks_sf), "park areas."))
+# Handle potential empty parks_sf before union
+if (nrow(parks_sf) > 0) {
+  parks_proj <- st_transform(parks_sf, target_crs)
+  parks_union_proj <- st_union(parks_proj) # Assumes parks_proj is not empty
+  print(paste("Found and combined", nrow(parks_sf), "park areas."))
+} else {
+  print("No park polygons found in the query.")
+  parks_union_proj <- st_sf(geometry = st_sfc(crs = target_crs)) # Create empty sf object with target CRS
+}
+
 
 # --- 4b. Main Station (Hamburg Hbf) ----
 print("Querying OSM for Hamburg Hauptbahnhof...")
@@ -69,11 +74,14 @@ hbf_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
 if (!is.null(hbf_osm$osm_points) && nrow(hbf_osm$osm_points) > 0) {
   hbf_sf <- hbf_osm$osm_points[1, ]
   print("Found Hamburg Hbf as a point.")
-} else {
-  # Assumes polygons exist if points don't
+} else if (!is.null(hbf_osm$osm_polygons) && nrow(hbf_osm$osm_polygons) > 0) {
   hbf_sf <- st_centroid(hbf_osm$osm_polygons[1, ]) # Use osm_polygons, could also check multipolygons
   print("Found Hamburg Hbf as a polygon, using centroid.")
+} else {
+  hbf_sf <- st_sf(geometry = st_sfc(st_point(), crs=4326)) # Empty point geometry if not found
+  print("Hamburg Hbf not found as point or polygon.")
 }
+
 hbf_proj <- st_transform(hbf_sf, target_crs)
 
 # --- 4c. Bars----
@@ -81,64 +89,95 @@ print("Querying OSM for bars...")
 bars_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
   add_osm_feature(key = "amenity", value = c("bar", "pub")) %>%
   osmdata_sf()
-bars_sf <- bars_osm$osm_points %>% filter(!sf::st_is_empty(.)) # Keep basic empty check
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(bars_osm$osm_points) && nrow(bars_osm$osm_points) > 0) {
+  bars_sf <- bars_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(bars_sf), "bars/pubs as points."))
+} else {
+  bars_poly_centroids_sf <- bind_rows(bars_osm$osm_polygons, bars_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  bars_sf <- bars_poly_centroids_sf
+  print(paste("Found", nrow(bars_sf), "bars/pubs as polygon/multipolygon centroids."))
+}
 bars_proj <- st_transform(bars_sf, target_crs)
-print(paste("Found", nrow(bars_sf), "bars/pubs."))
+
 
 # --- 4d. Restaurants----
 print("Querying OSM for restaurants...")
 restaurants_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
   add_osm_feature(key = "amenity", value = "restaurant") %>%
   osmdata_sf()
-restaurants_sf <- restaurants_osm$osm_points %>% filter(!sf::st_is_empty(.)) # Keep basic empty check
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(restaurants_osm$osm_points) && nrow(restaurants_osm$osm_points) > 0) {
+  restaurants_sf <- restaurants_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(restaurants_sf), "restaurants as points."))
+} else {
+  restaurants_poly_centroids_sf <- bind_rows(restaurants_osm$osm_polygons, restaurants_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  restaurants_sf <- restaurants_poly_centroids_sf
+  print(paste("Found", nrow(restaurants_sf), "restaurants as polygon/multipolygon centroids."))
+}
 restaurants_proj <- st_transform(restaurants_sf, target_crs)
-print(paste("Found", nrow(restaurants_sf), "restaurants."))
 
-# --- 4e. Other Leisure Activities----
+
+# --- 4e. Other Leisure Activities (excluding parks)----
 print("Querying OSM for other leisure activities...")
 leisure_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
   add_osm_feature(key = "leisure") %>%
   osmdata_sf()
 
-# Combine points and centroids of polygons/multipolygons
-leisure_points_sf <- leisure_osm$osm_points
-leisure_poly_centroids_sf <- bind_rows(leisure_osm$osm_polygons, leisure_osm$osm_multipolygons) %>%
-  filter(!sf::st_is_empty(.)) %>% # Keep basic empty check
-  st_make_valid() %>%
-  st_centroid()
-
-all_leisure_locations_sf <- bind_rows(leisure_points_sf, leisure_poly_centroids_sf) %>%
-  filter(!sf::st_is_empty(.)) # Keep basic empty check
-
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(leisure_osm$osm_points) && nrow(leisure_osm$osm_points) > 0) {
+  all_leisure_locations_sf <- leisure_osm$osm_points
+  print(paste("Found", nrow(all_leisure_locations_sf), "other leisure locations as points."))
+} else {
+  leisure_poly_centroids_sf <- bind_rows(leisure_osm$osm_polygons, leisure_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  all_leisure_locations_sf <- leisure_poly_centroids_sf
+  print(paste("Found", nrow(all_leisure_locations_sf), "other leisure locations as polygon/multipolygon centroids."))
+}
 
 # Filter out the park-like leisure types
-park_leisure_tags_to_exclude <- park_tags
+park_leisure_tags_to_exclude <- park_tags # Re-using park_tags defined earlier
 other_leisure_sf <- all_leisure_locations_sf %>%
   filter(! (leisure %in% park_leisure_tags_to_exclude) )
 
 other_leisure_proj <- st_transform(other_leisure_sf, target_crs)
-print(paste("Found", nrow(other_leisure_sf), "other leisure locations (points/centroids)."))
 
 
 # --- 4f. Bus Stops ----
 print("Querying OSM for bus stops...")
 bus_stops_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
   add_osm_feature(key = "highway", value = "bus_stop") %>%
-  # Query platforms separately to potentially filter later if needed
-  # add_osm_feature(key = "public_transport", value = "platform") %>%
   osmdata_sf()
 
-bus_stops_sf <- if (!is.null(bus_stops_osm$osm_points)) bus_stops_osm$osm_points %>% filter(!sf::st_is_empty(.)) else st_sf(geometry = st_sfc(crs=4326))
+# Bus stops are typically points, but handle potential polygons
+if (!is.null(bus_stops_osm$osm_points) && nrow(bus_stops_osm$osm_points) > 0) {
+  bus_stops_sf <- bus_stops_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(bus_stops_sf), "bus stops as points."))
+} else {
+  bus_stops_poly_centroids_sf <- bind_rows(bus_stops_osm$osm_polygons, bus_stops_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  bus_stops_sf <- bus_stops_poly_centroids_sf
+  print(paste("Found", nrow(bus_stops_sf), "bus stops as polygon/multipolygon centroids."))
+}
+
 bus_stops_sf <- bus_stops_sf %>%
-  arrange(name) %>%  # optional: prioritize by order
+  # Optional: Remove duplicates based on name/location if desired
+  arrange(name) %>% # optional: prioritize by order
   group_by(name) %>%
-  slice(1) %>%       # keep the first geometry per name
+  slice(1) %>% # keep the first geometry per name
   ungroup()
 
-
-# If querying platforms too: filter them, e.g., by checking associated route relations or tags like bus=yes
 bus_stops_proj <- st_transform(bus_stops_sf, target_crs)
-print(paste("Found", nrow(bus_stops_sf), "bus stops."))
 
 
 # --- 4g. Subway Stations (U-Bahn)----
@@ -146,30 +185,234 @@ print("Querying OSM for subway stations (U-Bahn)...")
 # Querying stations explicitly tagged as subway
 subway_stations_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
   add_osm_feature(key = "station", value = "subway") %>%
+  # Also include public_transport=station where station=subway might be missing but relation exists
+  add_osm_feature(key = "public_transport", value = "station") %>%
   osmdata_sf()
 
-# Get points and polygon centroids
-subway_points_sf <- if (!is.null(subway_stations_osm$osm_points)) subway_stations_osm$osm_points else st_sf(geometry = st_sfc(crs=4326))
-subway_polygons_sf <- subway_stations_osm$osm_polygons %>%
-  filter(!sf::st_is_empty(.)) %>%
-  st_make_valid()
-subway_poly_centroids_sf <- if (nrow(subway_polygons_sf) > 0) st_centroid(subway_polygons_sf) else st_sf(geometry = st_sfc(crs=4326))
-
-# Combine and ensure unique locations if points and polygons overlap significantly for the same station
-# Simple approach: just bind rows. A more complex approach might dissolve by name.
-subway_stations_sf <- bind_rows(subway_points_sf, subway_poly_centroids_sf) %>% filter(!sf::st_is_empty(.))
-# Optional: Add further filtering, e.g., ensure railway=station or public_transport=station is also present if needed
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(subway_stations_osm$osm_points) && nrow(subway_stations_osm$osm_points) > 0) {
+  subway_stations_sf <- subway_stations_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(subway_stations_sf), "subway stations as points."))
+} else {
+  subway_poly_centroids_sf <- bind_rows(subway_stations_osm$osm_polygons, subway_stations_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  subway_stations_sf <- subway_poly_centroids_sf
+  print(paste("Found", nrow(subway_stations_sf), "subway stations as polygon/multipolygon centroids."))
+}
 
 subway_stations_sf <- subway_stations_sf %>%
-  arrange(name) %>%  # optional: prioritize by order
+  # Optional: Remove duplicates based on name/location if desired
+  arrange(name) %>% # optional: prioritize by order
   group_by(name) %>%
-  slice(1) %>%       # keep the first geometry per name
+  slice(1) %>% # keep the first geometry per name
   ungroup()
 
-
 subway_stations_proj <- st_transform(subway_stations_sf, target_crs)
-print(paste("Found", nrow(subway_stations_sf), "potential subway station locations (points/centroids)."))
+print(paste("Found", nrow(subway_stations_sf), "potential subway station locations."))
 
+
+# --- 4h. Schools ----
+print("Querying OSM for schools...")
+schools_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "school") %>%
+  osmdata_sf()
+
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(schools_osm$osm_points) && nrow(schools_osm$osm_points) > 0) {
+  schools_sf <- schools_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(schools_sf), "school locations as points."))
+} else {
+  schools_poly_centroids_sf <- bind_rows(schools_osm$osm_polygons, schools_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  schools_sf <- schools_poly_centroids_sf
+  print(paste("Found", nrow(schools_sf), "school locations as polygon/multipolygon centroids."))
+}
+schools_proj <- st_transform(schools_sf, target_crs)
+
+
+# --- 4i. Kindergartens ----
+print("Querying OSM for kindergartens...")
+kindergartens_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "kindergarten") %>%
+  osmdata_sf()
+
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(kindergartens_osm$osm_points) && nrow(kindergartens_osm$osm_points) > 0) {
+  kindergartens_sf <- kindergartens_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(kindergartens_sf), "kindergarten locations as points."))
+} else {
+  kindergartens_poly_centroids_sf <- bind_rows(kindergartens_osm$osm_polygons, kindergartens_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  kindergartens_sf <- kindergartens_poly_centroids_sf
+  print(paste("Found", nrow(kindergartens_sf), "kindergarten locations as polygon/multipolygon centroids."))
+}
+kindergartens_proj <- st_transform(kindergartens_sf, target_crs)
+
+
+# --- 4j. Supermarkets ----
+print("Querying OSM for supermarkets...")
+supermarkets_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "shop", value = "supermarket") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(supermarkets_osm$osm_points) && nrow(supermarkets_osm$osm_points) > 0) {
+  supermarkets_sf <- supermarkets_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(supermarkets_sf), "supermarket locations as points."))
+} else {
+  supermarkets_poly_centroids_sf <- bind_rows(supermarkets_osm$osm_polygons, supermarkets_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  supermarkets_sf <- supermarkets_poly_centroids_sf
+  print(paste("Found", nrow(supermarkets_sf), "supermarket locations as polygon/multipolygon centroids."))
+}
+supermarkets_proj <- st_transform(supermarkets_sf, target_crs)
+
+
+# --- 4k. Cafes ----
+print("Querying OSM for cafes...")
+cafes_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "cafe") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(cafes_osm$osm_points) && nrow(cafes_osm$osm_points) > 0) {
+  cafes_sf <- cafes_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(cafes_sf), "cafe locations as points."))
+} else {
+  cafes_poly_centroids_sf <- bind_rows(cafes_osm$osm_polygons, cafes_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  cafes_sf <- cafes_poly_centroids_sf
+  print(paste("Found", nrow(cafes_sf), "cafe locations as polygon/multipolygon centroids."))
+}
+cafes_proj <- st_transform(cafes_sf, target_crs)
+
+
+# --- 4l. Doctors ----
+print("Querying OSM for doctors...")
+doctors_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "doctors") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(doctors_osm$osm_points) && nrow(doctors_osm$osm_points) > 0) {
+  doctors_sf <- doctors_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(doctors_sf), "doctor locations as points."))
+} else {
+  doctors_poly_centroids_sf <- bind_rows(doctors_osm$osm_polygons, doctors_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  doctors_sf <- doctors_poly_centroids_sf
+  print(paste("Found", nrow(doctors_sf), "doctor locations as polygon/multipolygon centroids."))
+}
+doctors_proj <- st_transform(doctors_sf, target_crs)
+
+
+# --- 4m. Hospitals ----
+print("Querying OSM for hospitals...")
+hospitals_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "hospital") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(hospitals_osm$osm_points) && nrow(hospitals_osm$osm_points) > 0) {
+  hospitals_sf <- hospitals_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(hospitals_sf), "hospital locations as points."))
+} else {
+  hospitals_poly_centroids_sf <- bind_rows(hospitals_osm$osm_polygons, hospitals_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  hospitals_sf <- hospitals_poly_centroids_sf
+  print(paste("Found", nrow(hospitals_sf), "hospital locations as polygon/multipolygon centroids."))
+}
+hospitals_proj <- st_transform(hospitals_sf, target_crs)
+
+
+# --- 4n. Museums ----
+print("Querying OSM for museums...")
+museums_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "tourism", value = "museum") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(museums_osm$osm_points) && nrow(museums_osm$osm_points) > 0) {
+  museums_sf <- museums_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(museums_sf), "museum locations as points."))
+} else {
+  museums_poly_centroids_sf <- bind_rows(museums_osm$osm_polygons, museums_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  museums_sf <- museums_poly_centroids_sf
+  print(paste("Found", nrow(museums_sf), "museum locations as polygon/multipolygon centroids."))
+}
+museums_proj <- st_transform(museums_sf, target_crs)
+
+
+# --- 4o. Cinemas ----
+print("Querying OSM for cinemas...")
+cinemas_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "cinema") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(cinemas_osm$osm_points) && nrow(cinemas_osm$osm_points) > 0) {
+  cinemas_sf <- cinemas_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(cinemas_sf), "cinema locations as points."))
+} else {
+  cinemas_poly_centroids_sf <- bind_rows(cinemas_osm$osm_polygons, cinemas_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  cinemas_sf <- cinemas_poly_centroids_sf
+  print(paste("Found", nrow(cinemas_sf), "cinema locations as polygon/multipolygon centroids."))
+}
+cinemas_proj <- st_transform(cinemas_sf, target_crs)
+
+
+# --- 4p. Sports Centres ----
+print("Querying OSM for sports centres...")
+sports_centres_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "leisure", value = "sports_centre") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(sports_centres_osm$osm_points) && nrow(sports_centres_osm$osm_points) > 0) {
+  sports_centres_sf <- sports_centres_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(sports_centres_sf), "sports centre locations as points."))
+} else {
+  sports_centres_poly_centroids_sf <- bind_rows(sports_centres_osm$osm_polygons, sports_centres_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  sports_centres_sf <- sports_centres_poly_centroids_sf
+  print(paste("Found", nrow(sports_centres_sf), "sports centre locations as polygon/multipolygon centroids."))
+}
+sports_centres_proj <- st_transform(sports_centres_sf, target_crs)
+
+
+# --- 4q. Libraries ----
+print("Querying OSM for libraries...")
+libraries_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711), timeout = 120) %>%
+  add_osm_feature(key = "amenity", value = "library") %>%
+  osmdata_sf()
+# Prioritize points, otherwise use polygon/multipolygon centroids
+if (!is.null(libraries_osm$osm_points) && nrow(libraries_osm$osm_points) > 0) {
+  libraries_sf <- libraries_osm$osm_points %>% filter(!sf::st_is_empty(.))
+  print(paste("Found", nrow(libraries_sf), "library locations as points."))
+} else {
+  libraries_poly_centroids_sf <- bind_rows(libraries_osm$osm_polygons, libraries_osm$osm_multipolygons) %>%
+    filter(!sf::st_is_empty(.)) %>%
+    st_make_valid() %>%
+    st_centroid()
+  libraries_sf <- libraries_poly_centroids_sf
+  print(paste("Found", nrow(libraries_sf), "library locations as polygon/multipolygon centroids."))
+}
+libraries_proj <- st_transform(libraries_sf, target_crs)
 
 # --- 5. Create Hexagonal Grid----
 print("Creating hexagonal grid...")
@@ -184,18 +427,52 @@ print(paste("Created grid with", nrow(hex_grid_hamburg), "hexagons intersecting 
 hex_centroids_proj <- st_centroid(hex_grid_hamburg)
 
 # --- 6. Calculate Metrics per Hexagon----
+# --- 6a Add District Information ----
+print("Querying OSM for Hamburg districts (admin_level=6)...")
+districts_osm <- opq(bbox = c(9.626770,53.383328,10.351868,53.748711)) %>%
+  add_osm_feature(key = "boundary", value = "administrative") %>%
+  add_osm_feature(key = "admin_level", value = "9") %>%
+  osmdata_sf()
 
-# --- 6a. Proximity to Nearest Park ----
+# Process district multipolygons (most likely represent districts)
+districts_sf <- districts_osm$osm_multipolygons  %>%
+  filter(!sf::st_is_empty(.)) %>%
+  st_make_valid() %>%
+  # Optional: Filter by name if specific districts are needed, or if query pulls unrelated features
+  filter(name %in% c("Altona", "Eimsbüttel", "Hamburg-Nord", "Wandsbek", "Bergedorf", "Harburg", "Hamburg-Mitte")) %>%
+  select(district_name = name) # Keep only name and rename the column
+
+# Project district boundaries to the target CRS
+districts_proj <- st_transform(districts_sf, target_crs)
+print(paste("Found", nrow(districts_proj), "potential district polygons."))
+
+
+
+# Perform spatial join: Join hexagon centroids to district polygons
+# This assigns the district name whose polygon contains the centroid
+print("Joining hexagon centroids to district polygons...")
+hex_district_join <- st_join(hex_centroids_proj, districts_proj, join = st_within, left = TRUE) %>%
+  st_drop_geometry() # Drop geometry after join, only keep hex_id and district_name
+
+# Join the district name back to the main hexagon grid object
+hex_grid_hamburg <- hex_grid_hamburg %>%
+  left_join(hex_district_join, by = "hex_id")
+
+print("Added district information to hexagons.")
+print(paste("Number of hexagons with district name:", sum(!is.na(hex_grid_hamburg$district_name))))
+print(paste("Number of hexagons without district name:", sum(is.na(hex_grid_hamburg$district_name)))) # Might be outer boundary hexagons
+
+# --- 6b. Proximity to Nearest Park ----
 print("Calculating proximity to nearest park...")
 dist_to_park <- st_distance(hex_centroids_proj, parks_union_proj)
 hex_grid_hamburg$dist_park_m <- drop_units(dist_to_park[,1]) # Assumes distance calc works
 
-# --- 6b. Proximity to Main Station----
+# --- 6c. Proximity to Main Station----
 print("Calculating proximity to Hamburg Hbf...")
 dist_to_hbf <- st_distance(hex_centroids_proj, hbf_proj)
 hex_grid_hamburg$dist_hbf_m <- drop_units(dist_to_hbf[,1]) # Assumes distance calc works
 
-# --- 6c. Count Points within Hexagons----
+# --- 6d. Count Points within Hexagons----
 print("Counting features within hexagons...")
 
 # Simplified function to count points in hexagons
@@ -233,13 +510,26 @@ count_points_in_hex_simple <- function(hex_sf, points_proj, col_name) {
 hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, bars_proj, "bar_count")
 hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, restaurants_proj, "restaurant_count")
 hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, other_leisure_proj, "other_leisure_count")
-hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, bus_stops_proj, "bus_stop_count") # New
-hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, subway_stations_proj, "subway_station_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, bus_stops_proj, "bus_stop_count")
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, subway_stations_proj, "subway_station_count")
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, schools_proj, "school_count")
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, kindergartens_proj, "kindergarten_count")
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, supermarkets_proj, "supermarket_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, cafes_proj, "cafe_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, doctors_proj, "doctors_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, hospitals_proj, "hospital_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, museums_proj, "museum_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, cinemas_proj, "cinema_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, sports_centres_proj, "sports_centre_count") # New
+hex_grid_hamburg <- count_points_in_hex_simple(hex_grid_hamburg, libraries_proj, "library_count") # New
+
+hex_grid_hamburg <- hex_grid_hamburg%>%
+  filter(!is.na(district_name))
 
 print("Finished calculating metrics.")
 
 
-# --- 6d. Generate Summary Table----
+# --- 6e. Generate Summary Table----
 # (Optional summary)
 # print("--- Overall Summary Statistics for Hexagons ---")
 # hex_summary_data <- st_drop_geometry(hex_grid_hamburg)
@@ -247,18 +537,28 @@ print("Finished calculating metrics.")
 # print("---")
 
 
-# 6e. Calculate Attractivity Index ---- 
+# 6f. Calculate Attractivity Index ---- 
 print("Calculating Attractivity Index...")
 
 # --- Define Weights (adjust as needed, should sum to 1) ---
 weights <- list(
-  park_dist = 0.15,  # Proximity to parks
-  hbf_dist  = 0.05,  # Proximity to main station
-  bars      = 0.15,  # Density of bars (reduced)
-  restaurants = 0.15, # Density of restaurants (reduced)
-  leisure   = 0.15,  # Density of other leisure (reduced)
-  bus_stops = 0.20,  # Density of bus stops (New)
-  subway_stations = 0.15 # Density of subway stations (New)
+  park_dist = 0.06, # Proximity to parks
+  hbf_dist = 0.05, # Proximity to main station
+  bars = 0.05, # Density of bars (adjusted)
+  restaurants = 0.05, # Density of restaurants (adjusted - increased to make sum 1)
+  leisure = 0.05, # Density of other leisure (adjusted)
+  bus_stops = 0.11, # Density of bus stops (adjusted)
+  subway_stations = 0.11, # Density of subway stations (adjusted)
+  schools = 0.08, # Density of schools (adjusted)
+  kindergartens = 0.08, # Density of kindergartens (adjusted)
+  supermarkets = 0.08, # Density of supermarkets (New)
+  cafes = 0.06, # Density of cafes (New)
+  doctors = 0.06, # Density of doctors (New)
+  hospitals = 0.03, # Density of hospitals (New)
+  museums = 0.02, # Density of museums (New)
+  cinemas = 0.03, # Density of cinemas (New)
+  sports_centres = 0.05, # Density of sports centres (New)
+  libraries = 0.03 # Density of libraries (New)
 )
 # Check weights sum
 if(abs(sum(unlist(weights)) - 1) > 1e-9) warning("Weights do not sum precisely to 1!")
@@ -293,8 +593,19 @@ hex_grid_hamburg <- hex_grid_hamburg %>%
     bar_score = normalize_min_max(bar_count),
     restaurant_score = normalize_min_max(restaurant_count),
     leisure_score = normalize_min_max(other_leisure_count),
-    bus_stop_score = normalize_min_max(bus_stop_count), # New
-    subway_station_score = normalize_min_max(subway_station_count), # New
+    bus_stop_score = normalize_min_max(bus_stop_count),
+    subway_station_score = normalize_min_max(subway_station_count),
+    school_score = normalize_min_max(school_count),
+    kindergarten_score = normalize_min_max(kindergarten_count),
+    supermarket_score = normalize_min_max(supermarket_count), # New
+    cafe_score = normalize_min_max(cafe_count), # New
+    doctors_score = normalize_min_max(doctors_count), # New
+    hospital_score = normalize_min_max(hospital_count), # New
+    museum_score = normalize_min_max(museum_count), # New
+    cinema_score = normalize_min_max(cinema_count), # New
+    sports_centre_score = normalize_min_max(sports_centre_count), # New
+    library_score = normalize_min_max(library_count), # New
+    
     
     # Normalize distances (lower is better), then invert score (1 - normalized)
     dist_park_norm = normalize_min_max(dist_park_m),
@@ -306,12 +617,22 @@ hex_grid_hamburg <- hex_grid_hamburg %>%
     # --- Calculate final weighted index ---
     # Replace NA scores with 0 before weighting
     attractivity_index = ( weights$park_dist * replace_na(park_dist_score, 0) ) +
-      ( weights$hbf_dist  * replace_na(hbf_dist_score, 0) ) +
-      ( weights$bars      * replace_na(bar_score, 0) ) +
+      ( weights$hbf_dist * replace_na(hbf_dist_score, 0) ) +
+      ( weights$bars * replace_na(bar_score, 0) ) +
       ( weights$restaurants * replace_na(restaurant_score, 0) ) +
-      ( weights$leisure   * replace_na(leisure_score, 0) ) +
-      ( weights$bus_stops * replace_na(bus_stop_score, 0) ) +         # New
-      ( weights$subway_stations * replace_na(subway_station_score, 0) ) # New
+      ( weights$leisure * replace_na(leisure_score, 0) ) +
+      ( weights$bus_stops * replace_na(bus_stop_score, 0) ) +
+      ( weights$subway_stations * replace_na(subway_station_score, 0) ) +
+      ( weights$schools * replace_na(school_score, 0) ) +
+      ( weights$kindergartens * replace_na(kindergarten_score, 0) ) +
+      ( weights$supermarkets * replace_na(supermarket_score, 0) ) + # New
+      ( weights$cafes * replace_na(cafe_score, 0) ) + # New
+      ( weights$doctors * replace_na(doctors_score, 0) ) + # New
+      ( weights$hospitals * replace_na(hospital_score, 0) ) + # New
+      ( weights$museums * replace_na(museum_score, 0) ) + # New
+      ( weights$cinemas * replace_na(cinema_score, 0) ) + # New
+      ( weights$sports_centres * replace_na(sports_centre_score, 0) ) + # New
+      ( weights$libraries * replace_na(library_score, 0) ) # New
   )
 
 print("Attractivity Index calculated.")
@@ -319,6 +640,155 @@ print("Summary of Index:")
 print(summary(hex_grid_hamburg$attractivity_index))
 print(paste("Min Index:", round(min(hex_grid_hamburg$attractivity_index, na.rm=TRUE), 4)))
 print(paste("Max Index:", round(max(hex_grid_hamburg$attractivity_index, na.rm=TRUE), 4)))
+
+
+# --- 8. Add AI Analysis to Hexagons ----
+print("Starting AI analysis for each hexagon using the geminiR package...")
+
+# Load necessary library for interacting with the Gemini API
+# install.packages("geminiR") # Install geminiR package from CRAN
+library(geminiR)
+setAPI("AIzaSyBlZdzXdPOvEEeCR3tFDQMb1GIlo28RFy8") # check https://makersuite.google.com/app/apikey
+
+# --- Function to construct the AI prompt for a single hexagon ---
+# This function takes a single row (a hexagon's data) and formats it into a prompt string.
+# Customize this prompt to guide the AI's analysis.
+construct_ai_prompt <- function(hex_data_row) {
+  # Extract relevant data points (adjust column names as needed)
+  hex_id <- hex_data_row$hex_id
+  district <- hex_data_row$district_name
+  dist_park <- hex_data_row$dist_park_m
+  dist_hbf <- hex_data_row$dist_hbf_m
+  bars <- hex_data_row$bar_count
+  restaurants <- hex_data_row$restaurant_count
+  leisure <- hex_data_row$other_leisure_count
+  bus_stops <- hex_data_row$bus_stop_count
+  subway_stations <- hex_data_row$subway_station_count
+  schools <- hex_data_row$school_count
+  kindergartens <- hex_data_row$kindergarten_count
+  supermarkets <- hex_data_row$supermarket_count # New
+  cafes <- hex_data_row$cafe_count # New
+  doctors <- hex_data_row$doctors_count # New
+  hospitals <- hex_data_row$hospital_count # New
+  museums <- hex_data_row$museum_count # New
+  cinemas <- hex_data_row$cinema_count # New
+  sports_centres <- hex_data_row$sports_centre_count # New
+  libraries <- hex_data_row$library_count # New
+  attractivity <- hex_data_row$attractivity_index # The calculated index
+  
+  # Handle potential NA values gracefully in the prompt
+  district_text <- if (is.na(district)) "an unknown district" else paste("the district of", district)
+  park_text <- if (is.na(dist_park)) "unknown distance to a park" else paste(round(dist_park), "meters from the nearest park")
+  hbf_text <- if (is.na(dist_hbf)) "unknown distance to Hamburg Hauptbahnhof" else paste(round(dist_hbf), "meters from Hamburg Hauptbahnhof")
+  
+  # Construct the prompt string, including new data points
+  prompt <- paste0(
+    "Analyze the characteristics of an area in Hamburg, Germany, located in ", district_text, ". ",
+    "Based on the following data points, provide a concise summary of its key features and potential appeal:\n",
+    "- Distance to nearest park: ", park_text, "\n",
+    "- Distance to Hamburg Hauptbahnhof: ", hbf_text, "\n",
+    "- Number of bars/pubs: ", bars, "\n",
+    "- Number of restaurants: ", restaurants, "\n",
+    "- Number of other leisure locations: ", leisure, "\n",
+    "- Number of bus stops: ", bus_stops, "\n",
+    "- Number of subway stations: ", subway_stations, "\n",
+    "- Number of schools: ", schools, "\n",
+    "- Number of kindergartens: ", kindergartens, "\n",
+    "- Number of supermarkets: ", supermarkets, "\n", # New
+    "- Number of cafes: ", cafes, "\n", # New
+    "- Number of doctors: ", doctors, "\n", # New
+    "- Number of hospitals: ", hospitals, "\n", # New
+    "- Number of museums: ", museums, "\n", # New
+    "- Number of cinemas: ", cinemas, "\n", # New
+    "- Number of sports centres: ", sports_centres, "\n", # New
+    "- Number of libraries: ", libraries, "\n", # New
+    "- Calculated Attractivity Index (0-1 scale): ", round(attractivity, 3), "\n\n",
+    "Focus on summarizing its accessibility (parks, Hbf, public transport), density of amenities (bars, restaurants, leisure, retail, healthcare, culture, sports, libraries), and presence of educational facilities. Provide a brief overall assessment based on the attractivity index. Keep the analysis to 3-4 sentences." # Increased sentence count slightly
+  )
+  
+  return(prompt)
+}
+
+
+# --- Function to call Gemini using the geminiR package ---
+# This function sends the prompt to Gemini and extracts the analysis text from the response.
+call_gemini_analysis <- function(prompt) {
+  # Use geminiR::gemini_generate_content to call the API
+  # The API key should be set via Sys.setenv or gemini_init before this function is called.
+  response <- tryCatch({
+    gemini(
+      prompt = prompt,
+      model = "2.0-flash-lite"
+    )
+  }, error = function(e) {
+    message("Gemini API call failed: ", e$message)
+    return(NULL) # Return NULL on error
+  })
+  
+  if (is.null(response)) {
+    message("NULL response from Gemini API.")
+    return(NA_character_) # Return NA on API error
+  }
+  
+  # geminiR::gemini_generate_content typically returns a list, with the generated text
+  # often accessible directly or within a specific structure depending on the response format.
+  # We'll try to extract the text content.
+  analysis_text <- NA_character_ # Default to NA if extraction fails
+  return(response)
+}
+
+# --- Iterate through hexagons and get AI analysis ---
+# Initialize a new column for the AI analysis
+hex_grid_hamburg$ai_analysis <- NA_character_
+
+# Loop through each row (hexagon) in the data frame
+# Using seq_len(nrow(hex_grid_hamburg)) is safer than 1:nrow(hex_grid_hamburg) for 0 rows
+for (i in seq_len(nrow(hex_grid_hamburg))) {
+  print(paste("Processing hexagon", i, "of", nrow(hex_grid_hamburg)))
+  
+  # Get the data for the current hexagon
+  current_hex_data <- hex_grid_hamburg[i, ]
+  
+  # Construct the prompt
+  prompt <- construct_ai_prompt(current_hex_data)
+  # print(paste("Prompt for hexagon", i, ":", prompt)) # Optional: Print prompt for debugging
+  
+  # Call Gemini using the geminiR package
+  analysis <-  call_gemini_analysis(prompt)
+  
+  # Store the analysis result
+  hex_grid_hamburg$ai_analysis[i] <- analysis
+  
+  # Optional: Add a small delay between calls to avoid hitting rate limits
+  Sys.sleep(3) # Sleep for 0.1 seconds
+}
+
+print("Finished AI analysis for all hexagons using geminiR.")
+
+# Now hex_grid_hamburg has a new column 'ai_analysis' with the generated text.
+# You can inspect the results:
+# print(head(hex_grid_hamburg %>% select(hex_id, district_name, attractivity_index, ai_analysis)))
+
+# To use this as static data, you would typically save the hex_grid_hamburg object
+# For example, save as an RData file:
+# save(hex_grid_hamburg, file = "hex_grid_hamburg_with_analysis.RData")
+# Or save as a GeoPackage (if you want to use it in GIS software):
+# st_write(hex_grid_hamburg, "hex_grid_hamburg_with_analysis.gpkg", append = FALSE)
+
+
+# Get the data for the current hexagon
+current_hex_data <- hex_grid_hamburg%>%
+  filter(!is.na(district_name))
+
+current_hex_data[1, ]
+
+# Construct the prompt
+prompt <- construct_ai_prompt(current_hex_data)
+# print(paste("Prompt for hexagon", i, ":", prompt)) # Optional: Print prompt for debugging
+
+# Call Gemini using the geminiR package
+analysis <- call_gemini_analysis(prompt)
+
 
 
 # --- 7. Visualization (Updated for Index) ----
@@ -339,7 +809,7 @@ print("Creating Neo-Brutalist inspired palette...")
 
 # Define custom colors (adjust as desired)
 # Example: Dark Grey -> Electric Blue -> Lime Green -> Bright Yellow
-neo_brutalist_colors <- c("#69D2E7", "#90EE90", "#E3A018", "#FF69B4", "#9723c9")
+neo_brutalist_colors <- c("#FF4911", "#9723c9", "#69D2E7", "#2FFF2F")
 
 # Define the number of distinct color bins (quantiles)
 n_color_bins <- 4 # Results in 4 distinct colors for 4 quantiles
@@ -371,18 +841,39 @@ popup_content <- paste0(
     font-size: 18px;
     margin-bottom: 6px;
     letter-spacing: 0.5px;
+    overflow: scroll;
   '><b>Hex ID: ", htmltools::htmlEscape(hex_grid_viz$hex_id), "</b></div>",
+  # Add District Name if available
+  ifelse(!is.na(hex_grid_viz$district_name), paste0("<div><b>District:</b> ", htmltools::htmlEscape(hex_grid_viz$district_name), "</div>"), ""),
   "<div><b>Attractivity Index:</b> ", round(hex_grid_viz$attractivity_index, 3), "</div>",
   "<hr style='margin: 8px 0;'>",
-  "📍 <b>Dist. to Park:</b> ", ifelse(is.na(hex_grid_viz$dist_park_m), "N/A", round(hex_grid_viz$dist_park_m, 0)), " m<br>",
-  "🚉 <b>Dist. to Hbf:</b> ", ifelse(is.na(hex_grid_viz$dist_hbf_m), "N/A", round(hex_grid_viz$dist_hbf_m, 0)), " m<br>",
+  "📍 <b>Dist. to Park:</b> ", ifelse(is.na(hex_grid_viz$dist_park_m), "N/A", paste0(round(hex_grid_viz$dist_park_m, 0), " m")), "<br>",
+  "🚉 <b>Dist. to Hbf:</b> ", ifelse(is.na(hex_grid_viz$dist_hbf_m), "N/A", paste0(round(hex_grid_viz$dist_hbf_m, 0), " m")), "<br>",
   "🍻 <b>Bars/Pubs:</b> ", hex_grid_viz$bar_count, "<br>",
   "🍽️ <b>Restaurants:</b> ", hex_grid_viz$restaurant_count, "<br>",
   "🎯 <b>Other Leisure:</b> ", hex_grid_viz$other_leisure_count, "<br>",
   "🚌 <b>Bus Stops:</b> ", hex_grid_viz$bus_stop_count, "<br>",
-  "🚇 <b>U-Bahn Stations:</b> ", hex_grid_viz$subway_station_count,
+  "🚇 <b>U-Bahn Stations:</b> ", hex_grid_viz$subway_station_count, "<br>",
+  "🏫 <b>Schools:</b> ", hex_grid_viz$school_count, "<br>",
+  "🎒 <b>Kindergartens:</b> ", hex_grid_viz$kindergarten_count, "<br>",
+  "🛒 <b>Supermarkets:</b> ", hex_grid_viz$supermarket_count, "<br>", # New
+  "☕ <b>Cafes:</b> ", hex_grid_viz$cafe_count, "<br>", # New
+  "🩺 <b>Doctors:</b> ", hex_grid_viz$doctors_count, "<br>", # New
+  "🏥 <b>Hospitals:</b> ", hex_grid_viz$hospital_count, "<br>", # New
+  "🏛️ <b>Museums:</b> ", hex_grid_viz$museum_count, "<br>", # New
+  "🎬 <b>Cinemas:</b> ", hex_grid_viz$cinema_count, "<br>", # New
+  "🏟️ <b>Sports Centres:</b> ", hex_grid_viz$sports_centre_count, "<br>", # New
+  "📚 <b>Libraries:</b> ", hex_grid_viz$library_count, # New
+  "<hr style='margin: 8px 0;'>", # Add another separator before the AI analysis
+  # Add the AI Analysis section
+  "🧠 <b>AI Analysis:</b><br>",
+  ifelse(is.na(hex_grid_viz$ai_analysis) | hex_grid_viz$ai_analysis == "",
+         "Analysis not available.", # Message if analysis is missing
+         htmltools::htmlEscape(hex_grid_viz$ai_analysis) # Display analysis, escaping HTML
+  ),
   "</div>"
 )
+
 
 
 # --- Create HTML for the Explanation Box (Added PT stops) ---
@@ -396,6 +887,7 @@ explanation_html <- paste0(
     line-height: 1.4;
     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     max-width: 270px;
+    overflow: scroll;
   '>",
   "<div style='
     font-family: \"Bebas Neue\", sans-serif;
