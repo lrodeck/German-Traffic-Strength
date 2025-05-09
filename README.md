@@ -29,9 +29,11 @@ Based on these metrics, it computes a customizable "Attractivity Index" and visu
 -   Includes an on-map explanation of the index components and weighting.
 -   (Optional) Includes a helper function (`save_sf_objects_to_rds`) to save generated spatial data frames (`sf` objects ending in `_sf`) to individual `.rds` files.
 
-## Example Output
+## Hexagon Attractivity Scores
 
-![Example Map Output](Rplot.png) *Visualization showing the Attractivity Index across Hamburg hexagons.*
+![Hexagons](https://scontent-fra5-1.cdninstagram.com/v/t51.2885-15/496607677_17906440893118838_2922386944955786277_n.jpg?stp=dst-jpg_e35_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6InRocmVhZHMuQ0FST1VTRUxfSVRFTS5pbWFnZV91cmxnZW4uMTA3M3g4NTAuc2RyLmY3NTc2MS5kZWZhdWx0X2ltYWdlIn0&_nc_ht=scontent-fra5-1.cdninstagram.com&_nc_cat=102&_nc_oc=Q6cZ2QGTVM_qtIy3ebLRfxtIor9HxyUJ1e7QRhM3Rcv3Bvj9dx_ZShRJFQYA24BJTpBwTyfxjOvckzGhb6NGKiHYv4O5&_nc_ohc=_Wf-_ex-AX4Q7kNvwFUz2b_&_nc_gid=Sq-0ZeDXs_km5Am9V3cpGQ&edm=AA3DLpEBAAAA&ccb=7-5&ig_cache_key=MzYyNzM3MjAxMDUwMTQ4MDAzMg%3D%3D.3-ccb7-5&oh=00_AfLYRyGHFxuHKXe9obRJn07c6xKs4RF2Ff5Q6Jk2YeuJHg&oe=6823E918&_nc_sid=d92198) *Visualization showing the Attractivity Index across Hamburg hexagons.*
+
+![Isochrones](https://github.com/user-attachments/assets/6d41357c-25bd-4424-9ec3-b8317b1c6c79) *Visualization showing Isochrones from prominent spots in Hamburg.*
 
 ## Requirements
 
